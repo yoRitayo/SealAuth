@@ -18,6 +18,10 @@
 mono_crash.*
 
 # Build results
+[Dd]ist/
+dist-ssr/
+node_modules/
+*.local
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
