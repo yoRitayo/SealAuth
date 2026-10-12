@@ -1,12 +1,26 @@
 {
+  "name": "SealaAuth",
+  "description": "Autenticação segura com SealAuth",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "build": "node index.js",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui --coverage"
+  },
+  "author": "Alicia Benedetto Lima; Eduardo Feitosa Nunes; Rita de Cássia Brasil Alves",
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.5",
+    "@vitest/coverage-v8": "^5.0.4",
+    "@vitest/ui": "^5.0.4",
     "nodemon": "^3.1.14",
     "prisma": "^8.0.0-rc.22",
     "tailwindcss": "^4.3.3",
     "ts-node": "^10.9.2",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.4"
   },
   "dependencies": {
     "@prisma/client": "^7.10.0",
