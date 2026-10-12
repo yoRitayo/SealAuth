@@ -426,3 +426,11 @@ FodyWeavers.xsd
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+
+## Yarn 4
+
+.yarn/
+
+## Editor de texto
+
+.editorconfig
