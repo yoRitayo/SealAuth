@@ -54,12 +54,11 @@ export function Registrar({comRegistroBemSucedido,}: RegistrarPageProps) {
         {/* Lado esquerdo - Mensagem de boas-vindas */}
         <div className="hidden lg:flex flex-col justify-center space-y-6 px-8">
           <div className="space-y-4">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Junte-se à nossa loja
+            <h1 className="text-2xl font-semibold text-gray-800">
+              Junte-se ao nosso espaço seguro 
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed">
-              Crie sua conta e tenha acesso a ofertas exclusivas
-              nos últimos gadgets e tecnologias.
+              Crie sua conta
             </p>
           </div>
           <div className="space-y-4 pt-8">
@@ -79,10 +78,10 @@ export function Registrar({comRegistroBemSucedido,}: RegistrarPageProps) {
               </div>
               <div>
                 <h3 className="font-medium text-gray-900">
-                  Ofertas exclusivas
+                  Hasheamento com Argon2id
                 </h3>
                 <p className="text-sm text-gray-600">
-                  Descontos exclusivos para membros em gadgets premium
+                  Vencedor da Password Hashing Competition e recomendado pela OWASP
                 </p>
               </div>
             </div>
@@ -102,10 +101,10 @@ export function Registrar({comRegistroBemSucedido,}: RegistrarPageProps) {
               </div>
               <div>
                 <h3 className="font-medium text-gray-900">
-                  Envio rápido
+                  Autenticação com JWT
                 </h3>
                 <p className="text-sm text-gray-600">
-                  Entrega expressa grátis em todos os pedidos
+                  Gerenciamento seguro de sessão através de tempo configurado por você.
                 </p>
               </div>
             </div>
@@ -125,10 +124,33 @@ export function Registrar({comRegistroBemSucedido,}: RegistrarPageProps) {
               </div>
               <div>
                 <h3 className="font-medium text-gray-900">
-                  Proteção de garantia
+                  Comunicação criptografada 
                 </h3>
                 <p className="text-sm text-gray-600">
-                  Garantia estendida em todos os produtos
+                  Tráfego ocorre sobre HTTPS com TLS 1.2 ou 1.3 
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <svg
+                  className="w-4 h-4 text-purple-600"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900">
+                  Auditoria à prova de adulteração
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Inserção administrar por mecanismo advisory lock do PostgreSQL
                 </p>
               </div>
             </div>
