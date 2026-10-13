@@ -6,7 +6,7 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'src/style/componentes']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -27,7 +27,7 @@ export default defineConfig([
         "error",
         {
           "selector": "property",
-          "format": ["PascalCase"],
+          "format": ["camelCase", "PascalCase"],
           "leadingUnderscore": "allow"
         },
         {
@@ -38,7 +38,7 @@ export default defineConfig([
         {
           "selector": "variable",
           "modifiers": ["const", "global"],
-          "format": ["UPPER_CASE"]
+          "format": ["UPPER_CASE", "PascalCase"]
         }
       ]
     }
