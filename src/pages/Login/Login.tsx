@@ -7,11 +7,12 @@ import { Button } from '../../style/componentes/button';
 import { Checkbox } from '../../style/componentes/checkbox';
 import { Input } from '../../style/componentes/input';
 import { Label } from '../../style/componentes/label';
+
 interface LoginPageProps {
-  emErroLogin: () => void;
+  emSucessoLogin: () => void;
 }
 
-export function Login({ emErroLogin }: LoginPageProps) {
+export function Login({ emSucessoLogin }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [lembreDeMim, setLembreDeMim] = useState(false);
@@ -26,7 +27,7 @@ export function Login({ emErroLogin }: LoginPageProps) {
       setEstaCarregando(false);
       // Demo: aciona o modal de erro para demonstração
       if (email && senha) {
-        emErroLogin();
+        emSucessoLogin();
       }
     }, 1000);
   };

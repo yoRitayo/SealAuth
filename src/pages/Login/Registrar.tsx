@@ -5,13 +5,14 @@ import { AuthLogo } from "../../style/auth/AuthLogo";
 import { Button } from "../../style/componentes/button";
 import { Input } from "../../style/componentes/input";
 import { Label } from "../../style/componentes/label";
+import { emailSchema, ValidadorDeSenha } from "../utils";
 
 interface RegistrarPageProps {
   comRegistroBemSucedido: () => void;
 }
 
-export function Registrar({comRegistroBemSucedido,}: RegistrarPageProps) {
-  const [dadosFormulario, setdadosFormulario] = useState({
+export function Registrar({ comRegistroBemSucedido }: RegistrarPageProps) {
+  const [dadosFormulario, setDadosFormulario] = useState({
     nomeCompleto: "",
     email: "",
     celular: "",
@@ -19,29 +20,45 @@ export function Registrar({comRegistroBemSucedido,}: RegistrarPageProps) {
     confirmarSenha: "",
   });
   const [estaCarregando, setEstaCarregando] = useState(false);
-  const [senhaError, setsenhaError] = useState("");
+  const [erroEmailouSenha, setErroEmailouSenha] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setdadosFormulario((prev) => ({ ...prev, [name]: value }));
+    
+    const novosDados = { ...dadosFormulario, [name]: value };
+    setDadosFormulario(novosDados);
 
-    // Limpar erro de senha quando usuário digita
-    if (name === "senha" || name === "confirmarSenha") {
-      setsenhaError("");
+    if (name === "senha") {
+      const resultado = ValidadorDeSenha.validar(value);
+      setErroEmailouSenha(resultado.eValida ? "" : (resultado.erro || ""));
+    }
+
+    if (name === "confirmarSenha" || name === "senha") {
+      if (novosDados.confirmarSenha && novosDados.senha !== novosDados.confirmarSenha) {
+        setErroEmailouSenha("Senhas não são iguais. Tente novamente.");
+      }
     }
   };
 
   const handleSubmissao = (e: React.SubmitEvent) => {
     e.preventDefault();
 
-    if (dadosFormulario.senha !== dadosFormulario.confirmarSenha) {
-      setsenhaError("Senhas não são iguais. Tente novamente.");
+    const resultadoValidacaoEmail = emailSchema.safeParse(dadosFormulario.email);
+    const resultadoValidacaoSenha = ValidadorDeSenha.validar(dadosFormulario.senha);
+
+    if (!resultadoValidacaoSenha.eValida || !resultadoValidacaoEmail.success) {
+      setErroEmailouSenha("E-mail ou senha inválidos.");
       return;
     }
 
+    if (dadosFormulario.senha !== dadosFormulario.confirmarSenha) {
+      setErroEmailouSenha("Senhas não são iguais. Tente novamente.");
+      return;
+    }
+
+    setErroEmailouSenha("");
     setEstaCarregando(true);
 
-    // Simular registro
     setTimeout(() => {
       setEstaCarregando(false);
       comRegistroBemSucedido();
@@ -223,11 +240,11 @@ export function Registrar({comRegistroBemSucedido,}: RegistrarPageProps) {
                     id="senha"
                     name="senha"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Digite uma senha segura"
                     value={dadosFormulario.senha}
                     onChange={handleChange}
                     required
-                    className="h-12 rounded-xl"
+                    className={`h-12 rounded-xl ${erroEmailouSenha ? "border-red-500" : ""}`}
                   />
                 </div>
 
@@ -244,11 +261,11 @@ export function Registrar({comRegistroBemSucedido,}: RegistrarPageProps) {
                     value={dadosFormulario.confirmarSenha}
                     onChange={handleChange}
                     required
-                    className={`h-12 rounded-xl ${senhaError ? "border-red-500" : ""}`}
+                    className={`h-12 rounded-xl ${erroEmailouSenha ? "border-red-500" : ""}`}
                   />
-                  {senhaError && (
+                  {erroEmailouSenha && (
                     <p className="text-sm text-red-600">
-                      {senhaError}
+                      {erroEmailouSenha}
                     </p>
                   )}
                 </div>

@@ -105,6 +105,13 @@ export function ResetSenha() {
                   Tentar outro e-mail
                 </Button>
 
+              <Button
+                type="submit"
+                className="w-full h-12 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 transition-all duration-200"
+                disabled={estaCarregando}
+              >
+                {estaCarregando ? 'Enviando...' : 'Enviar novo link de redefinição'}
+              </Button>
                 <Link
                   to="/"
                   className="flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors pt-2"
