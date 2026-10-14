@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: ${NOME_CONTAINER}
+    restart: always
+    environment:
+      POSTGRES_DB: ${BANCO_NOME}
+      POSTGRES_USER: ${BANCO_USUARIO}
+      POSTGRES_PASSWORD: ${BANCO_SENHA}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: pgbouncer_proxy
+    restart: always
+    environment:
+      - DB_HOST=db          
+      - DB_PORT=5432    
+      - DB_USER=${BANCO_USUARIO}
+      - DB_PASSWORD=${BANCO_SENHA}
+      - DB_NAME=${BANCO_NOME}
+      - POOL_MODE=transaction
+    depends_on:
+      - db
+    networks:               
+      - app-network
+
+  backend:
+    build: ./backend
+    container_name: seal_backend
+    restart: always
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql://${BANCO_USUARIO}:${BANCO_SENHA}@pgbouncer:6432/${BANCO_NOME}
+      - ENV=${AMBIENTE_PYTHON}
+    depends_on:
+      - pgbouncer
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: app_frontend
+    restart: always
+    ports:
+      - "3006:3000"
+    environment:
+      - VITE_AMBIENTE_NODE=${VITE_AMBIENTE_NODE}
+      - VITE_API_URL=http://localhost:8001 
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+volumes:
+  pgdata:
+
+networks:
+  app-network:
+    driver: bridge
