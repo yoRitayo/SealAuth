@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Inicio } from './pages/Inicio';
 import { Login } from './pages/Login/Login';
 import { Registrar } from './pages/Login/Registrar';
 import { ResetSenha } from './pages/Login/ResetSenha';
@@ -7,7 +8,7 @@ import { ModalCadastroSucesso } from './style/auth/ModalCadastroSucesso';
 
 export function Root() {
   const endereco = useLocation();
-  const [mostrarSucessoLogin, setMostrarSucessoLogin] = useState(false);
+  const navegar = useNavigate();
   const [mostrarSucessoRegistro, setmostrarSucessoRegistro] = useState(false);
 
   const pagina = endereco.pathname;
@@ -17,10 +18,12 @@ export function Root() {
       return <Registrar comRegistroBemSucedido={() => setmostrarSucessoRegistro(true)} />;
     } else if (pagina === '/reset-senha') {
       return <ResetSenha />;
+    } else if (pagina === '/inicio') {
+      return <Inicio />;
     } else if (pagina === '/') {
-      return <Login emSucessoLogin={() => setMostrarSucessoLogin}/>;
+      return <Login emSucessoLogin={() => navegar('/inicio')} />;
     }
-    // Se nenhuma das páginas retornar então o router vai para a página 404
+    
     return null;
   };
 

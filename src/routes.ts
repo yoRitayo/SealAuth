@@ -20,5 +20,10 @@ export const Router = createBrowserRouter([
     {
         path: '/registrar',
         Component: Root,
+    },
+
+    {
+        path: '/inicio',
+        Component: Root,
     }
 ])
