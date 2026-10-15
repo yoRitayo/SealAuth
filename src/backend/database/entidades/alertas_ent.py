@@ -28,4 +28,4 @@ class Alerta(Base):
     hash_atual: Mapped[str] = mapped_column(Text)
     assinatura: Mapped[str] = mapped_column(LargeBinary)
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    bloqueio_ip: Mapped[BloqueioIP] = relationship(back_populates="alerta")
+    bloqueio_ip: Mapped["BloqueioIP"] = relationship(back_populates="alerta")

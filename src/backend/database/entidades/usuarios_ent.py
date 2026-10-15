@@ -30,4 +30,4 @@ class Usuario(Base):
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     logs: Mapped[List["LogAuditoria"]] = relationship(back_populates="usuario")
-    tentativas_login: Mapped[List[TentativaLogin]] = relationship(back_populates="usuario")
+    tentativas_login: Mapped[List["TentativaLogin"]] = relationship(back_populates="usuario")
