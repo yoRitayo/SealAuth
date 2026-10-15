@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Inicio } from './pages/Inicio';
-import { Login } from './pages/Login/Login';
-import { Registrar } from './pages/Login/Registrar';
-import { ResetSenha } from './pages/Login/ResetSenha';
-import { ModalCadastroSucesso } from './style/auth/ModalCadastroSucesso';
+import { Inicio } from '../pages/Inicio';
+import { Login } from '../pages/Login/Login';
+import { Registrar } from '../pages/Login/Registrar';
+import { ResetSenha } from '../pages/Login/ResetSenha';
+import { ModalCadastroSucesso } from '../style/auth/ModalCadastroSucesso';
 
 export function Root() {
   const endereco = useLocation();

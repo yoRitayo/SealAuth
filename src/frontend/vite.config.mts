@@ -10,13 +10,13 @@ export default defineConfig(( { mode } ) => {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': path.resolve(import.meta.dirname, '/src'),
-        '@components': path.resolve(import.meta.dirname, 'src/style/componentes')
+        '@': path.resolve(import.meta.dirname),
+        '@components': path.resolve(import.meta.dirname, 'style/componentes')
       },
     },
     server: {
       port: env.PORTA_APLICACAO ? Number(env.PORTA_APLICACAO): 3006,
-      open: true, 
+      open: true,
     },
-    }
+  };
 });

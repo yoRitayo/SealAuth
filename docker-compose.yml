@@ -3,7 +3,7 @@ version: '3.8'
 services:
   db:
     image: postgres:15-alpine
-    container_name: ${NOME_CONTAINER}
+    container_name: ${CONTAINER_NOME}
     restart: always
     environment:
       POSTGRES_DB: ${BANCO_NOME}
@@ -33,7 +33,7 @@ services:
       - app-network
 
   backend:
-    build: ./backend
+    build: src/backend
     container_name: seal_backend
     restart: always
     ports:
@@ -47,7 +47,7 @@ services:
       - app-network
 
   frontend:
-    build: ./frontend
+    build: src/frontend
     container_name: app_frontend
     restart: always
     ports:
