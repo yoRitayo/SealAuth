@@ -2,13 +2,14 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict
 
+from bloqueio_ip_ent import BloqueioIP
 from database import Base
 from sqlalchemy import BigInteger, DateTime, ForeignKey, LargeBinary, Text
 from sqlalchemy.dialects.postgresql import INET, JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
-class Alertas(Base):
+class Alerta(Base):
     """Tabela para guardar os logs de auditoria
 
     Args:
@@ -27,3 +28,4 @@ class Alertas(Base):
     hash_atual: Mapped[str] = mapped_column(Text)
     assinatura: Mapped[str] = mapped_column(LargeBinary)
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    bloqueio_ip: Mapped[BloqueioIP] = relationship(back_populates="alerta")

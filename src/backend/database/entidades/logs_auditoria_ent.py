@@ -5,10 +5,11 @@ from typing import Any, Dict
 from database import Base
 from sqlalchemy import BigInteger, DateTime, ForeignKey, LargeBinary, Text
 from sqlalchemy.dialects.postgresql import INET, JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from usuarios_ent import Usuario
 
 
-class LogsAuditoria(Base):
+class LogAuditoria(Base):
     """Tabela para guardar os logs de auditoria
 
     Args:
@@ -28,3 +29,4 @@ class LogsAuditoria(Base):
     hash_atual: Mapped[str] = mapped_column(Text)
     assinatura: Mapped[str] = mapped_column(LargeBinary)
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    usuario: Mapped["Usuario"] = relationship(back_populates="logs")

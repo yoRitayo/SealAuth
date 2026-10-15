@@ -4,11 +4,12 @@ from datetime import datetime
 from database import Base
 from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import CITEXT, INET
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
+from usuarios_ent import Usuario
 
 
-class TentativasLogin(Base):
+class TentativaLogin(Base):
     """Tabela para guardar as tentativas de login
 
     Args:
@@ -25,3 +26,4 @@ class TentativasLogin(Base):
     com_sucesso: Mapped[bool] = mapped_column(Boolean, default=True)
     motivo: Mapped[str] = mapped_column(Text)
     atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), onupdate=func.now)
+    usuario: Mapped["Usuario"] = relationship(back_populates="tentativas_login")

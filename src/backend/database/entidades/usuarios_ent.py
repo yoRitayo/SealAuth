@@ -1,13 +1,16 @@
 import uuid
 from datetime import datetime
+from typing import List
 
 from database import Base
+from logs_auditoria_ent import LogAuditoria
 from sqlalchemy import DateTime, Integer, LargeBinary, Text, Uuid
 from sqlalchemy.dialects.postgresql import CITEXT
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from tentativas_login_ent import TentativaLogin
 
 
-class Usuarios(Base):
+class Usuario(Base):
     """Tabela de usuários 
 
     Args:
@@ -25,3 +28,6 @@ class Usuarios(Base):
     falhas_consecutivas: Mapped[int] = mapped_column(Integer)
     bloqueado_ate: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    logs: Mapped[List["LogAuditoria"]] = relationship(back_populates="usuario")
+    tentativas_login: Mapped[List[TentativaLogin]] = relationship(back_populates="usuario")
