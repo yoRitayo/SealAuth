@@ -19,7 +19,8 @@ class LogsAuditoria(Base):
     __tablename__ = "LOGS_AUDITORIA"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    id_usuario: Mapped[uuid.UUID] = mapped_column(ForeignKey("usuarios.id", ondelete="CASCADE"))
+    # exclusão de usuário não apaga seu log 
+    id_usuario: Mapped[uuid.UUID] = mapped_column(ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True) 
     evento : Mapped[str] = mapped_column(Text)
     ip: Mapped[str] = mapped_column(INET) # Armazena IPv4 ou IPv6 
     jsonb: Mapped[Dict[str, Any]] = mapped_column(JSONB)
