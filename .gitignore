@@ -432,9 +432,10 @@ FodyWeavers.xsd
 #*.lscache
 
 ## Yarn 4
-
 .yarn/
 
-## Editor de texto
+## Ambiente python
+venv/
 
+## Editor de texto
 .editorconfig
