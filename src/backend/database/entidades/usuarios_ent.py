@@ -1,13 +1,15 @@
 import uuid
 from datetime import datetime
-from typing import List
+from typing import TYPE_CHECKING, List
 
-from database import Base
-from logs_auditoria_ent import LogAuditoria
+from database.database import Base
 from sqlalchemy import DateTime, Integer, LargeBinary, Text, Uuid
 from sqlalchemy.dialects.postgresql import CITEXT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from tentativas_login_ent import TentativaLogin
+
+if TYPE_CHECKING:
+    from database.entidades.logs_auditoria_ent import LogAuditoria
+    from database.entidades.tentativas_login_ent import TentativaLogin
 
 
 class Usuario(Base):
