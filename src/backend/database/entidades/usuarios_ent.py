@@ -28,7 +28,7 @@ class Usuario(Base):
     papel: Mapped[str] = mapped_column(Text)
     status: Mapped[str] = mapped_column(Text)
     falhas_consecutivas: Mapped[int] = mapped_column(Integer)
-    bloqueado_ate: Mapped[datetime] = mapped_column(
+    bloqueado_ate: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True)
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 

@@ -13,7 +13,8 @@ from schemas import (
     UsuarioAtualizarSenha,
     UsuarioCriar,
 )
-from seguranca import gerar_hash_senha, obter_usuario_atual, verificar_senha
+from redis_cliente import revogar_todas_sessoes
+from seguranca import gerar_hash_senha, verificar_senha, verificar_usuario
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -97,7 +98,7 @@ class UsuariosController:
     # Só o próprio usuário altera o nome
     async def atualizar_nome_usuario(self, id_usuario: UUID, dados: UsuarioAtualizarNome,
                                      db: Annotated[Session, Depends(obter_db)],
-                                     usuario_atual: Annotated[entidades.Usuario, Depends(obter_usuario_atual)]) -> entidades.Usuario:
+                                     usuario_atual: Annotated[entidades.Usuario, Depends(verificar_usuario)]) -> entidades.Usuario:
         if usuario_atual.id != id_usuario:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Você só pode alterar o próprio nome")
@@ -114,7 +115,7 @@ class UsuariosController:
     # Só o próprio usuário altera a senha, informando a atual
     async def atualizar_senha(self, id_usuario: UUID, dados: UsuarioAtualizarSenha,
                               db: Annotated[Session, Depends(obter_db)],
-                              usuario_atual: Annotated[entidades.Usuario, Depends(obter_usuario_atual)]) -> entidades.Usuario:
+                              usuario_atual: Annotated[entidades.Usuario, Depends(verificar_usuario)]) -> entidades.Usuario:
         if usuario_atual.id != id_usuario:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Você só pode alterar a própria senha")
@@ -123,6 +124,7 @@ class UsuariosController:
                                 detail="Senha atual incorreta")
         usuario_atual.senha = gerar_hash_senha(dados.nova_senha)
         db.commit()
+        revogar_todas_sessoes(usuario_atual.id)  # troca de senha derruba todas as sessões
         db.refresh(usuario_atual)
         return usuario_atual
 
@@ -144,6 +146,7 @@ class UsuariosController:
         usuario.status = "bloqueado"
         usuario.bloqueado_ate = None
         db.commit()
+        revogar_todas_sessoes(usuario.id)
         db.refresh(usuario)
         return usuario
 
@@ -163,4 +166,5 @@ class UsuariosController:
         _nao_pode_ser_o_proprio_admin(admin, usuario, "deletar")
         db.delete(usuario)
         db.commit()
+        revogar_todas_sessoes(id_usuario)
         return Response(status_code=status.HTTP_204_NO_CONTENT)

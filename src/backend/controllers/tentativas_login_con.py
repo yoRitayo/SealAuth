@@ -1,12 +1,12 @@
 from typing import Annotated
 from uuid import UUID
 
+from controle_acesso import ChecadorPermissao
 from database import entidades
 from database.database import obter_db
 from fastapi import APIRouter, Depends, HTTPException, status
 from schemas import TentativaLogin
 from sqlalchemy.orm import Session
-from controle_acesso import ChecadorPermissao
 
 
 class TentativasLoginController:
@@ -17,7 +17,7 @@ class TentativasLoginController:
             methods=["GET"], response_model=list[TentativaLogin],
             dependencies=[Depends(ChecadorPermissao("ler_logs"))])
 
-    async def obter_tentativas_login(self, id_usuario: UUID, db: Annotated[Session, Depends(obter_db)]):
+    async def obter_tentativas_login(self, id_usuario: UUID, db: Annotated[Session, Depends(obter_db)]) -> list[entidades.TentativaLogin]:
         tentativas = db.query(entidades.TentativaLogin).filter(
             entidades.TentativaLogin.id_usuario == id_usuario).all()
         if not tentativas:

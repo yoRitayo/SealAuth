@@ -16,7 +16,7 @@ class LogsAuditoriaController:
             response_model=list[LogAuditoria],
             dependencies=[Depends(ChecadorPermissao("ler_logs"))])
 
-    async def listar_logs_auditoria(self, db: Annotated[Session, Depends(obter_db)], pulo: int = 0, limite: int = 100):
+    async def listar_logs_auditoria(self, db: Annotated[Session, Depends(obter_db)], pulo: int = 0, limite: int = 100) -> list[entidades.LogAuditoria]:
         return (
             db.query(entidades.LogAuditoria)
             # mais recente ao mais antigo

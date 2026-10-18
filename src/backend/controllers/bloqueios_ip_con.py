@@ -29,7 +29,7 @@ class BloqueiosIPController:
             response_model=BloqueioIP,
             dependencies=[Depends(ChecadorPermissao("gerenciar_bloqueios"))])
 
-    async def criar_bloqueio_ip(self, dados: BloqueioIPCriar, db: Annotated[Session, Depends(obter_db)]):
+    async def criar_bloqueio_ip(self, dados: BloqueioIPCriar, db: Annotated[Session, Depends(obter_db)]) -> entidades.BloqueioIP:
         bloqueio = entidades.BloqueioIP(
             **dados.model_dump(), criado_em=datetime.now(UTC))
         db.add(bloqueio)
@@ -37,7 +37,7 @@ class BloqueiosIPController:
         db.refresh(bloqueio)
         return bloqueio
 
-    async def obter_bloqueio_ip(self, id_bloqueio: int, db: Annotated[Session, Depends(obter_db)]):
+    async def obter_bloqueio_ip(self, id_bloqueio: int, db: Annotated[Session, Depends(obter_db)]) -> list[entidades.BloqueioIP]:
         bloqueios = db.query(entidades.BloqueioIP).filter(
             entidades.BloqueioIP.id == id_bloqueio).all()
         if not bloqueios:
@@ -45,7 +45,7 @@ class BloqueiosIPController:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Bloqueios de IP não encontrados")
         return bloqueios
 
-    async def obter_bloqueios_do_alerta(self, id_alerta: int, db: Annotated[Session, Depends(obter_db)]):
+    async def obter_bloqueios_do_alerta(self, id_alerta: int, db: Annotated[Session, Depends(obter_db)]) -> list[entidades.BloqueioIP]:
         bloqueios = db.query(entidades.BloqueioIP).filter(
             entidades.BloqueioIP.id_alerta == id_alerta).all()
         if not bloqueios:
@@ -53,7 +53,7 @@ class BloqueiosIPController:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Bloqueios de IP não encontrados para este alerta")
         return bloqueios
 
-    async def atualizar_bloqueio_ip(self, id_bloqueio: int, dados: BloqueioIPAtualizar, db: Annotated[Session, Depends(obter_db)]):
+    async def atualizar_bloqueio_ip(self, id_bloqueio: int, dados: BloqueioIPAtualizar, db: Annotated[Session, Depends(obter_db)]) -> entidades.BloqueioIP:
         bloqueio = db.query(entidades.BloqueioIP).filter(
             entidades.BloqueioIP.id == id_bloqueio).with_for_update().first()
         if bloqueio is None:

@@ -2,7 +2,7 @@ from typing import Annotated
 
 from database import entidades
 from fastapi import Depends, HTTPException, status
-from seguranca import obter_usuario_atual
+from seguranca import verificar_usuario
 
 # Checagem de permissão (RBAC) usada como dependência nas rotas
 PERMISSOES: dict[str, frozenset[str]] = {
@@ -17,7 +17,7 @@ class ChecadorPermissao:
         # Permissão exigida pela rota
         self.permissao = permissao
 
-    def __call__(self, usuario: Annotated[entidades.Usuario, Depends(obter_usuario_atual)]) -> entidades.Usuario:
+    def __call__(self, usuario: Annotated[entidades.Usuario, Depends(verificar_usuario)]) -> entidades.Usuario:
         permissoes_do_papel = PERMISSOES.get(usuario.papel, frozenset())
         if self.permissao not in permissoes_do_papel:
             raise HTTPException(

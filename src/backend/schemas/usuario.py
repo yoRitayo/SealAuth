@@ -39,6 +39,7 @@ class UsuarioAtualizarPapel(BaseModel):
     papel: Papel
 
 
+# O refresh token fica em um cookie HttpOnly
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"

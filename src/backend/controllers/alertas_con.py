@@ -22,7 +22,7 @@ class AlertasController:
             methods=["GET"], response_model=list[Alerta],
             dependencies=[Depends(ChecadorPermissao("ler_alertas"))])
 
-    async def criar_alerta(self, dados: AlertaCriar, db: Annotated[Session, Depends(obter_db)]):
+    async def criar_alerta(self, dados: AlertaCriar, db: Annotated[Session, Depends(obter_db)]) -> entidades.Alerta:
         alerta = entidades.Alerta(
             **dados.model_dump(), criado_em=datetime.now(UTC))  # forma o dicionário com o dado
         db.add(alerta)
@@ -30,7 +30,7 @@ class AlertasController:
         db.refresh(alerta)
         return alerta
 
-    async def obter_alerta_usuario(self, id_usuario: UUID, db: Annotated[Session, Depends(obter_db)]):
+    async def obter_alerta_usuario(self, id_usuario: UUID, db: Annotated[Session, Depends(obter_db)]) -> list[entidades.Alerta]:
         alertas = db.query(entidades.Alerta).filter(
             entidades.Alerta.id_usuario == id_usuario).all()
         if not alertas:
