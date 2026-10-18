@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { ApiError } from "../../services/api";
+import { authService } from "../../services/Login/auth-service";
 import { AuthCard } from "../../style/auth/AuthCard";
 import { AuthLogo } from "../../style/auth/AuthLogo";
 import { Button } from "../../style/componentes/button";
@@ -13,9 +15,8 @@ interface RegistrarPageProps {
 
 export function Registrar({ comRegistroBemSucedido }: RegistrarPageProps) {
   const [dadosFormulario, setDadosFormulario] = useState({
-    nomeCompleto: "",
+    nomeUsuario: "",
     email: "",
-    celular: "",
     senha: "",
     confirmarSenha: "",
   });
@@ -24,7 +25,7 @@ export function Registrar({ comRegistroBemSucedido }: RegistrarPageProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
+
     const novosDados = { ...dadosFormulario, [name]: value };
     setDadosFormulario(novosDados);
 
@@ -40,14 +41,18 @@ export function Registrar({ comRegistroBemSucedido }: RegistrarPageProps) {
     }
   };
 
-  const handleSubmissao = (e: React.SubmitEvent) => {
+  const handleSubmissao = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const resultadoValidacaoEmail = emailSchema.safeParse(dadosFormulario.email);
     const resultadoValidacaoSenha = ValidadorDeSenha.validar(dadosFormulario.senha);
 
     if (!resultadoValidacaoSenha.eValida || !resultadoValidacaoEmail.success) {
-      setErroEmailouSenha("E-mail ou senha inválidos.");
+      setErroEmailouSenha(
+        !resultadoValidacaoEmail.success
+          ? "Endereço de e-mail inválido."
+          : resultadoValidacaoSenha.erro || "Senha inválida."
+      );
       return;
     }
 
@@ -56,13 +61,26 @@ export function Registrar({ comRegistroBemSucedido }: RegistrarPageProps) {
       return;
     }
 
+    if (!dadosFormulario.nomeUsuario.trim()) {
+      setErroEmailouSenha("Informe um nome de usuário.");
+      return;
+    }
+
     setErroEmailouSenha("");
     setEstaCarregando(true);
 
-    setTimeout(() => {
-      setEstaCarregando(false);
+    try {
+      await authService.registrar(dadosFormulario.nomeUsuario, dadosFormulario.email, dadosFormulario.senha);
       comRegistroBemSucedido();
-    }, 1000);
+    } catch (erro) {
+      if (erro instanceof ApiError && erro.status === 409) {
+        setErroEmailouSenha("Esse nome de usuário já existe.");
+      } else {
+        setErroEmailouSenha("Não foi possível criar a conta. Tente novamente.");
+      }
+    } finally {
+      setEstaCarregando(false);
+    }
   };
 
   return (
@@ -72,7 +90,7 @@ export function Registrar({ comRegistroBemSucedido }: RegistrarPageProps) {
         <div className="hidden lg:flex flex-col justify-center space-y-6 px-8">
           <div className="space-y-4">
             <h1 className="text-2xl font-semibold text-gray-800">
-              Junte-se ao nosso espaço seguro 
+              Junte-se ao nosso espaço seguro
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed">
               Crie sua conta
@@ -141,10 +159,10 @@ export function Registrar({ comRegistroBemSucedido }: RegistrarPageProps) {
               </div>
               <div>
                 <h3 className="font-medium text-gray-900">
-                  Comunicação criptografada 
+                  Comunicação criptografada
                 </h3>
                 <p className="text-sm text-gray-600">
-                  Tráfego ocorre sobre HTTPS com TLS 1.2 ou 1.3 
+                  Tráfego ocorre sobre HTTPS com TLS 1.2 ou 1.3
                 </p>
               </div>
             </div>
@@ -188,15 +206,15 @@ export function Registrar({ comRegistroBemSucedido }: RegistrarPageProps) {
                 onSubmit={handleSubmissao}
                 className="space-y-5"
               >
-                {/* Nome completo */}
+                {/* Nome de usuário */}
                 <div className="space-y-2">
-                  <Label htmlFor="nomeCompleto">Nome completo</Label>
+                  <Label htmlFor="nomeUsuario">Nome de usuário</Label>
                   <Input
-                    id="nomeCompleto"
-                    name="nomeCompleto"
+                    id="nomeUsuario"
+                    name="nomeUsuario"
                     type="text"
-                    placeholder="João da Silva"
-                    value={dadosFormulario.nomeCompleto}
+                    placeholder="joao.silva"
+                    value={dadosFormulario.nomeUsuario}
                     onChange={handleChange}
                     required
                     className="h-12 rounded-xl"
@@ -212,21 +230,6 @@ export function Registrar({ comRegistroBemSucedido }: RegistrarPageProps) {
                     type="email"
                     placeholder="voce@exemplo.com"
                     value={dadosFormulario.email}
-                    onChange={handleChange}
-                    required
-                    className="h-12 rounded-xl"
-                  />
-                </div>
-
-                {/* Celular */}
-                <div className="space-y-2">
-                  <Label htmlFor="celular">Número de celular</Label>
-                  <Input
-                    id="celular"
-                    name="celular"
-                    type="tel"
-                    placeholder="+55 (11) 00000-0000"
-                    value={dadosFormulario.celular}
                     onChange={handleChange}
                     required
                     className="h-12 rounded-xl"

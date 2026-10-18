@@ -1,6 +1,8 @@
 import type { CheckedState } from '@radix-ui/react-checkbox';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ApiError } from '../../services/api';
+import { useAuth } from '../../services/Login/auth-context';
 import { AuthCard } from '../../style/auth/AuthCard';
 import { AuthLogo } from '../../style/auth/AuthLogo';
 import { Button } from '../../style/componentes/button';
@@ -13,23 +15,38 @@ interface LoginPageProps {
 }
 
 export function Login({ emSucessoLogin }: LoginPageProps) {
-  const [email, setEmail] = useState('');
+  const { entrar } = useAuth();
+  const [nomeUsuario, setNomeUsuario] = useState('');
   const [senha, setSenha] = useState('');
   const [lembreDeMim, setLembreDeMim] = useState(false);
   const [estaCarregando, setEstaCarregando] = useState(false);
+  const [erro, setErro] = useState('');
 
-  const handleSubmissao = (e: React.SubmitEvent) => {
+  const handleSubmissao = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErro('');
     setEstaCarregando(true);
-    
-    // Simular tentativa de login
-    setTimeout(() => {
-      setEstaCarregando(false);
-      // Demo: aciona o modal de erro para demonstração
-      if (email && senha) {
-        emSucessoLogin();
+
+    try {
+      await entrar(nomeUsuario, senha);
+      emSucessoLogin();
+    } catch (erroCapturado) {
+      if (erroCapturado instanceof ApiError) {
+        if (erroCapturado.status === 429) {
+          setErro('Muitas tentativas. Aguarde um minuto antes de tentar novamente.');
+        } else if (erroCapturado.status === 423) {
+          setErro('Conta bloqueada por excesso de tentativas. Tente novamente mais tarde.');
+        } else if (erroCapturado.status === 403) {
+          setErro(erroCapturado.message);
+        } else {
+          setErro('Usuário ou senha inválidos.');
+        }
+      } else {
+        setErro('Não foi possível conectar ao servidor. Tente novamente.');
       }
-    }, 1000);
+    } finally {
+      setEstaCarregando(false);
+    }
   };
 
   return (
@@ -57,15 +74,15 @@ export function Login({ emSucessoLogin }: LoginPageProps) {
               subtitle="Informe suas credenciais para acessar sua conta"
             >
               <form onSubmit={handleSubmissao} className="space-y-5">
-                {/* Campo de e-mail */}
+                {/* Campo de nome de usuário */}
                 <div className="space-y-2">
-                  <Label htmlFor="email">Endereço de e-mail</Label>
+                  <Label htmlFor="nomeUsuario">Nome de usuário</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="voce@exemplo.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="nomeUsuario"
+                    type="text"
+                    placeholder="seu-usuario"
+                    value={nomeUsuario}
+                    onChange={(e) => setNomeUsuario(e.target.value)}
                     required
                     className="h-12 rounded-xl"
                   />
@@ -84,6 +101,12 @@ export function Login({ emSucessoLogin }: LoginPageProps) {
                     className="h-12 rounded-xl"
                   />
                 </div>
+
+                {erro && (
+                  <p className="text-sm text-red-600" role="alert">
+                    {erro}
+                  </p>
+                )}
 
                 {/* Lembrar-me e Esqueci a senha */}
                 <div className="flex items-center justify-between">

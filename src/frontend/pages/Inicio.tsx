@@ -1,14 +1,21 @@
+import { useAuth } from '../services/Login/auth-context';
+import { PainelAdmin } from './Painel/PainelAdmin';
+import { PainelAnalista } from './Painel/PainelAnalista';
+import { PainelUsuario } from './Painel/PainelUsuario';
+
+// Página inicial é um despachante: cada papel vê um painel diferente,
+// compatível com as ações que ele de fato pode executar na API.
 export function Inicio() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-2xl text-center space-y-4">
-        <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
-          Bem-vindo.
-        </h1>
-        <p className="text-xl text-gray-600 font-medium">
-          Esse é seu espaço seguro
-        </p>
-      </div>
-    </div>
-  );
+  const { usuario } = useAuth();
+
+  if (!usuario) return null;
+
+  switch (usuario.papel) {
+    case 'admin':
+      return <PainelAdmin />;
+    case 'analista':
+      return <PainelAnalista />;
+    default:
+      return <PainelUsuario />;
+  }
 }

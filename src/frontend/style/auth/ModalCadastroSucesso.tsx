@@ -34,10 +34,11 @@ export function ModalCadastroSucesso({ open, onClose }: ModalCadastroSucessoProp
             </div>
           </div>
           <DialogTitle className="text-center text-2xl">
-            Bem-vindo.
+            Quase lá.
           </DialogTitle>
           <DialogDescription className="text-center pt-2">
-            Sua conta foi criada com sucesso. Você está pronto para aproveitar de seu sistema de autenticação seguro. 
+            Sua conta foi criada. Enviamos um link de ativação para o seu e-mail — confirme-o
+            antes de entrar pela primeira vez.
           </DialogDescription>
         </DialogHeader>
 
@@ -46,7 +47,7 @@ export function ModalCadastroSucesso({ open, onClose }: ModalCadastroSucessoProp
             onClick={handleContinue}
             className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 transition-all duration-200 rounded-xl"
           >
-            Continue to Login
+            Continuar para o login
           </Button>
         </DialogFooter>
       </DialogContent>

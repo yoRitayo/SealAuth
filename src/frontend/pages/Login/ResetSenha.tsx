@@ -1,6 +1,7 @@
 import { ArrowLeft, Mail } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { authService } from '../../services/Login/auth-service';
 import { AuthCard } from '../../style/auth/AuthCard';
 import { AuthLogo } from '../../style/auth/AuthLogo';
 import { Button } from '../../style/componentes/button';
@@ -12,15 +13,17 @@ export function ResetSenha() {
   const [estaCarregando, setEstaCarregando] = useState(false);
   const [foiEnviado, setFoiEnviado] = useState(false);
 
-  const handleSubmissao = (e: React.SubmitEvent) => {
+  const handleSubmissao = async (e: React.FormEvent) => {
     e.preventDefault();
     setEstaCarregando(true);
-    
-    // Simular requisição de senha
-    setTimeout(() => {
+
+    try {
+      // Sempre responde 202, mesmo que o e-mail não exista: evita revelar quais contas existem
+      await authService.esqueciSenha(email);
+    } finally {
       setEstaCarregando(false);
       setFoiEnviado(true);
-    }, 1000);
+    }
   };
 
   return (
@@ -32,7 +35,7 @@ export function ResetSenha() {
         <AuthCard
           title={foiEnviado ? "Verifique seu e-mail" : "Redefinir senha"}
           subtitle={foiEnviado
-            ? "Enviamos as instruções de redefinição de senha para o seu e-mail"
+            ? "Se o e-mail existir em nossa base, enviamos as instruções de redefinição de senha"
             : "Informe seu endereço de e-mail e enviaremos um link de redefinição"
           }
         >
@@ -87,11 +90,11 @@ export function ResetSenha() {
               {/* Mensagem */}
               <div className="text-center space-y-3">
                 <p className="text-gray-600">
-                  Enviamos um link de redefinição de senha para
+                  Se existir uma conta com o e-mail
                 </p>
                 <p className="font-medium text-gray-900">{email}</p>
                 <p className="text-sm text-gray-500">
-                  Não recebeu o e-mail? Verifique sua caixa de spam ou tente novamente.
+                  você receberá um link de redefinição. Não recebeu? Verifique sua caixa de spam ou tente novamente.
                 </p>
               </div>
 
@@ -105,13 +108,6 @@ export function ResetSenha() {
                   Tentar outro e-mail
                 </Button>
 
-              <Button
-                type="submit"
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 transition-all duration-200"
-                disabled={estaCarregando}
-              >
-                {estaCarregando ? 'Enviando...' : 'Enviar novo link de redefinição'}
-              </Button>
                 <Link
                   to="/"
                   className="flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors pt-2"

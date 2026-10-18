@@ -14,7 +14,17 @@ export const Router = createBrowserRouter([
 
     {
         path: '/reset-senha',
-        Component: Root, 
+        Component: Root,
+    },
+
+    {
+        path: '/redefinir-senha',
+        Component: Root,
+    },
+
+    {
+        path: '/ativar-conta',
+        Component: Root,
     },
 
     {
@@ -25,5 +35,10 @@ export const Router = createBrowserRouter([
     {
         path: '/inicio',
         Component: Root,
-    }
+    },
+
+    {
+        path: '*',
+        Component: Root,
+    },
 ])
