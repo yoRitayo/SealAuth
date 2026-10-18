@@ -28,11 +28,11 @@ Instale **antes** de continuar:
 | Ferramenta | Versão recomendada | Para quê |
 |---|---|---|
 | [Docker Engine / Docker Desktop](https://docs.docker.com/get-docker/) | 24+ com **Compose v2** (`docker compose`, não `docker-compose`) | Roda todo o projeto |
-| Git | qualquer recente | Clonar o repositório |
+| Git | qualquer versão recente | Clonar o repositório |
 | OpenSSL | qualquer versão recente | Gerar o segredo do JWT (opcional: há fallback para o `.env`) |
-| Make | qualquer | Atalhos de comandos (opcional; sem ele, use `docker compose` direto) |
-| Node.js + Yarn | Node 22, Yarn 1.22 | **Só** se for editar o frontend com autocomplete na IDE |
-| Python | 3.13+ | **Só** se for editar o backend com autocomplete na IDE |
+| Make | qualquer versão | Atalhos de comandos (opcional; sem ele, use `docker compose`) |
+| Node.js + Yarn | Node 22, Yarn 1.22 | Editar o frontend |
+| Python | 3.13+ | Editar o backend |
 
 Confira o Docker:
 
