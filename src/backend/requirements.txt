@@ -8,6 +8,7 @@ certifi==2026.7.22
 cffi==2.1.1
 charset-normalizer==3.5.2
 click==8.5.0
+cryptography==50.0.2
 detect-installer==0.2.1
 dnspython==2.9.0
 email-validator==2.3.0
@@ -33,6 +34,7 @@ opentelemetry-exporter-otlp-proto-http==1.45.1
 opentelemetry-proto==1.45.1
 opentelemetry-sdk==1.45.1
 opentelemetry-semantic-conventions==0.66b1
+passlib==1.7.4
 protobuf==7.36.2
 psycopg2-binary==2.9.13
 pycparser==3.11
@@ -41,10 +43,11 @@ pydantic-extra-types==2.11.1
 pydantic-settings==2.16.0
 pydantic_core==2.50.1
 Pygments==2.21.0
+PyJWT==2.15.1
 python-dotenv==1.2.4
 python-multipart==0.0.32
 PyYAML==6.0.3
-pyjwt==2.15.1
+redis==8.1.0
 requests==2.34.2
 rich==15.0.0
 rich-toolkit==0.20.6
