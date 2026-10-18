@@ -1,0 +1,21 @@
+[project]
+name = "sealauth-backend"
+version = "0.1.0"
+description = "Backend do SealAuth"
+readme = "src/backend/README.md"
+authors = [
+    { name = "yoRitayo", email = "ritacassiabralves@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.143.3",
+    "psycopg2-binary>=2.9.13",
+]
+
+[tool.uv]
+# Aplicação, não biblioteca: não empacota o projeto, só instala as dependências
+package = false
+
+[build-system]
+requires = ["uv_build>=0.13.1,<0.14.0"]
+build-backend = "uv_build"
