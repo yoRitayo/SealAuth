@@ -26,7 +26,14 @@ def preparar_banco() -> None:
 
 preparar_banco()
 
-app = FastAPI()
+app = FastAPI(
+    title="SealAuth API",
+    version="0.1.0",
+    description=(
+        "Para testar rotas protegidas: faça login em /auth/login pelo botão **Authorize** "
+        "(usuário e senha). O refresh token fica em cookie HttpOnly e não aparece na resposta."
+    ),
+)
 
 app.include_router(AuthController().router)
 app.include_router(UsuariosController().router)
