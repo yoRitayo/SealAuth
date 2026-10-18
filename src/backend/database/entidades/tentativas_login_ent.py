@@ -23,10 +23,13 @@ class TentativaLogin(Base):
     __tablename__ = "TENTATIVAS_LOGIN"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    id_usuario: Mapped[uuid.UUID] = mapped_column(ForeignKey("USUARIOS.id", ondelete="CASCADE"))
+    id_usuario: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("USUARIOS.id", ondelete="CASCADE"))
     nome_usuario_informado: Mapped[str] = mapped_column(CITEXT)
-    ip: Mapped[str] = mapped_column(INET) # Armazena IPv4 ou IPv6 
+    ip: Mapped[str] = mapped_column(INET)  # Armazena IPv4 ou IPv6
     com_sucesso: Mapped[bool] = mapped_column(Boolean, default=True)
     motivo: Mapped[str] = mapped_column(Text)
-    atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), onupdate=func.now)
-    usuario: Mapped["Usuario"] = relationship(back_populates="tentativas_login")
+    atualizado_em: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), onupdate=func.now)
+    usuario: Mapped["Usuario"] = relationship(
+        back_populates="tentativas_login")

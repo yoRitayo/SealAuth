@@ -1,6 +1,6 @@
-import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
+from uuid import UUID
 
 from database.database import Base
 from sqlalchemy import DateTime, Integer, LargeBinary, Text, Uuid
@@ -21,15 +21,18 @@ class Usuario(Base):
     """
     __tablename__ = "USUARIOS"
 
-    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     nome_usuario: Mapped[str] = mapped_column(CITEXT, unique=True)
     email: Mapped[str] = mapped_column(LargeBinary)
     senha: Mapped[str] = mapped_column(Text)
     papel: Mapped[str] = mapped_column(Text)
     status: Mapped[str] = mapped_column(Text)
     falhas_consecutivas: Mapped[int] = mapped_column(Integer)
-    bloqueado_ate: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    bloqueado_ate: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=True)
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
-    logs: Mapped[List["LogAuditoria"]] = relationship(back_populates="usuario")
-    tentativas_login: Mapped[List["TentativaLogin"]] = relationship(back_populates="usuario")
+    # passive_deletes: a exclusão é feita pelo banco (ON DELETE SET NULL / CASCADE)
+    logs: Mapped[list["LogAuditoria"]] = relationship(back_populates="usuario", passive_deletes=True)
+    tentativas_login: Mapped[list["TentativaLogin"]
+                             ] = relationship(back_populates="usuario", passive_deletes=True)
