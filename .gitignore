@@ -435,7 +435,7 @@ FodyWeavers.xsd
 .yarn/
 
 ## Ambiente python
-venv/
+src/backend/.venv/
 
 ## Editor de texto
 .editorconfig
