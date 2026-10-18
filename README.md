@@ -1,12 +1,5 @@
 # SealAuth
 
-Sistema de autenticação e autorização com trilha de auditoria à prova de adulteração.
-
-- Login com **JWT de acesso** (15 min) + **refresh token rotativo** em cookie HttpOnly, com detecção de reuso.
-- Senhas com **Argon2id**; **RBAC** com três papéis (`admin`, `analista`, `usuario`).
-- Ativação de conta e redefinição de senha **por e-mail**.
-- Logs de auditoria **somente inserção** (trigger no PostgreSQL).
-
 ## Stack
 
 | Camada | Tecnologia |
