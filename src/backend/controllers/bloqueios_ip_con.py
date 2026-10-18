@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from typing import Annotated
 
+from controle_acesso import ChecadorPermissao
 from database import entidades
 from database.database import obter_db
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,14 +13,21 @@ class BloqueiosIPController:
     def __init__(self):
         self.router = APIRouter(tags=["bloqueios_ip"])
         self.router.add_api_route(
-            "/bloqueios_ip", self.criar_bloqueio_ip,
-            methods=["POST"], status_code=status.HTTP_201_CREATED, response_model=BloqueioIP)
+            "/bloqueios_ip", self.criar_bloqueio_ip, methods=["POST"],
+            status_code=status.HTTP_201_CREATED, response_model=BloqueioIP,
+            dependencies=[Depends(ChecadorPermissao("gerenciar_bloqueios"))])
         self.router.add_api_route(
-            "/bloqueios_ip/{id_bloqueio}", self.obter_bloqueio_ip,
-            methods=["GET"], response_model=list[BloqueioIP])
+            "/bloqueios_ip/{id_bloqueio}", self.obter_bloqueio_ip, methods=["GET"],
+            response_model=list[BloqueioIP],
+            dependencies=[Depends(ChecadorPermissao("ler_alertas"))])
         self.router.add_api_route(
-            "/bloqueios_ip/{id_bloqueio}", self.atualizar_bloqueio_ip,
-            methods=["PATCH"], response_model=BloqueioIP)
+            "/alertas/{id_alerta}/bloqueios_ip", self.obter_bloqueios_do_alerta, methods=["GET"],
+            response_model=list[BloqueioIP],
+            dependencies=[Depends(ChecadorPermissao("ler_alertas"))])
+        self.router.add_api_route(
+            "/bloqueios_ip/{id_bloqueio}", self.atualizar_bloqueio_ip, methods=["PATCH"],
+            response_model=BloqueioIP,
+            dependencies=[Depends(ChecadorPermissao("gerenciar_bloqueios"))])
 
     async def criar_bloqueio_ip(self, dados: BloqueioIPCriar, db: Annotated[Session, Depends(obter_db)]):
         bloqueio = entidades.BloqueioIP(
@@ -37,9 +45,17 @@ class BloqueiosIPController:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Bloqueios de IP não encontrados")
         return bloqueios
 
+    async def obter_bloqueios_do_alerta(self, id_alerta: int, db: Annotated[Session, Depends(obter_db)]):
+        bloqueios = db.query(entidades.BloqueioIP).filter(
+            entidades.BloqueioIP.id_alerta == id_alerta).all()
+        if not bloqueios:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Bloqueios de IP não encontrados para este alerta")
+        return bloqueios
+
     async def atualizar_bloqueio_ip(self, id_bloqueio: int, dados: BloqueioIPAtualizar, db: Annotated[Session, Depends(obter_db)]):
         bloqueio = db.query(entidades.BloqueioIP).filter(
-            entidades.BloqueioIP.id == id_bloqueio).first()
+            entidades.BloqueioIP.id == id_bloqueio).with_for_update().first()
         if bloqueio is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Bloqueio de IP não encontrado")

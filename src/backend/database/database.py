@@ -11,12 +11,16 @@ BANCO_NOME=os.getenv("BANCO_NOME", "meubanco")
 BANCO_USUARIO=os.getenv("BANCO_USUARIO", "meusuario")
 BANCO_SENHA=os.getenv("BANCO_SENHA", "uma_senha_muito_segura_e_longa")
 
-URL_BANCO = f"postgresql+psycopg2://{BANCO_USUARIO}:{BANCO_SENHA}@{CONTAINER_NOME}/{BANCO_NOME}"
+# O docker-compose entrega DATABASE_URL apontando para o pgbouncer
+URL_BANCO = os.getenv(
+    "DATABASE_URL",
+    f"postgresql+psycopg2://{BANCO_USUARIO}:{BANCO_SENHA}@{CONTAINER_NOME}/{BANCO_NOME}",
+)
 
 engine = create_engine(URL_BANCO, echo=True)
 
 # Fábrica de sessões
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessaoLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Pylint pode reclamar mas deixa passar guys
 # https://docs.sqlalchemy.org/en/21/changelog/whatsnew_20.html#whatsnew-20-orm-declarative-typing
@@ -29,8 +33,8 @@ class Base(DeclarativeBase):
     """
     pass
 
-def get_db():
-    db = SessionLocal()
+def obter_db():
+    db = SessaoLocal()
     try:
         yield db # entrega para o fastapi
     finally:

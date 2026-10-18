@@ -1,24 +1,26 @@
 from datetime import UTC, datetime
 from typing import Annotated
+from uuid import UUID
 
 from database import entidades
 from database.database import obter_db
 from fastapi import APIRouter, Depends, HTTPException, status
-from schemas import Alerta, AlertaCriar, BloqueioIP
+from schemas import Alerta, AlertaCriar
 from sqlalchemy.orm import Session
+from controle_acesso import ChecadorPermissao
 
 
 class AlertasController:
     def __init__(self):
         self.router = APIRouter(tags=["alertas"])
         self.router.add_api_route(
-            "/alertas", self.criar_alerta,
-            methods=["POST"], status_code=status.HTTP_201_CREATED, response_model=Alerta)
+            "/alertas", self.criar_alerta, methods=["POST"],
+            status_code=status.HTTP_201_CREATED, response_model=Alerta,
+            dependencies=[Depends(ChecadorPermissao("gerenciar_bloqueios"))])
         self.router.add_api_route(
-            "/alertas/{id_alerta}", self.obter_alerta, methods=["GET"], response_model=list[Alerta])
-        self.router.add_api_route(
-            "/alertas/{id_alerta}/bloqueios_ip", self.obter_bloqueios_do_alerta,
-            methods=["GET"], response_model=list[BloqueioIP])
+            "/usuarios/{id_usuario}/alertas", self.obter_alerta_usuario,
+            methods=["GET"], response_model=list[Alerta],
+            dependencies=[Depends(ChecadorPermissao("ler_alertas"))])
 
     async def criar_alerta(self, dados: AlertaCriar, db: Annotated[Session, Depends(obter_db)]):
         alerta = entidades.Alerta(
@@ -28,18 +30,10 @@ class AlertasController:
         db.refresh(alerta)
         return alerta
 
-    async def obter_alerta(self, id_alerta: int, db: Annotated[Session, Depends(obter_db)]):
-        alerta = db.query(entidades.Alerta).filter(
-            entidades.Alerta.id == id_alerta).first()
-        if not alerta:
+    async def obter_alerta_usuario(self, id_usuario: UUID, db: Annotated[Session, Depends(obter_db)]):
+        alertas = db.query(entidades.Alerta).filter(
+            entidades.Alerta.id_usuario == id_usuario).all()
+        if not alertas:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Alerta não encontrados")
-        return alerta
-
-    async def obter_bloqueios_do_alerta(self, id_alerta: int, db: Annotated[Session, Depends(obter_db)]):
-        bloqueios = db.query(entidades.BloqueioIP).filter(
-            entidades.BloqueioIP.id_alerta == id_alerta).all()
-        if not bloqueios:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Bloqueios de IP não encontrados para este alerta")
-        return bloqueios
+                                detail="Alertas não encontrados")
+        return alertas
