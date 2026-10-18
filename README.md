@@ -50,13 +50,6 @@ git clone git@github.com:yoRitayo/SealAuth.git
 cd SealAuth
 ```
 
-Sem chave SSH configurada, use HTTPS:
-
-```bash
-git clone https://github.com/yoRitayo/SealAuth.git
-cd SealAuth
-```
-
 ## 3. Variáveis de ambiente
 
 O arquivo modelo se chama **`.env.template`** (não `.env.example`). Copie-o e edite:
