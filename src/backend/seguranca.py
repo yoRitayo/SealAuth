@@ -83,6 +83,7 @@ def verificar_usuario(
     if usuario is None:
         raise credenciais_invalidas
     if usuario.status == "bloqueado":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Conta bloqueada")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Conta bloqueada"
+        )
     return usuario

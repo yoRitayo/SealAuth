@@ -15,15 +15,16 @@ class Alerta(Base):
     """Tabela para guardar os logs de auditoria
 
     Args:
-        Base: cria automaticamente um dicionário Python que armazena uma série de 
-        objetos Table chaveados para sua string nome. 
+        Base: cria automaticamente um dicionário Python que armazena uma série de
+        objetos Table chaveados para sua string nome.
     """
 
     __tablename__ = "ALERTAS"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     id_usuario: Mapped[UUID] = mapped_column(
-        ForeignKey("USUARIOS.id", ondelete="CASCADE"))
+        ForeignKey("USUARIOS.id", ondelete="CASCADE")
+    )
     evento: Mapped[str] = mapped_column(Text)
     ip: Mapped[str] = mapped_column(INET)  # Armazena IPv4 ou IPv6
     jsonb: Mapped[dict[str, Any]] = mapped_column(JSONB)

@@ -6,7 +6,15 @@ from seguranca import verificar_usuario
 
 # Checagem de permissão (RBAC) usada como dependência nas rotas
 PERMISSOES: dict[str, frozenset[str]] = {
-    "admin": frozenset({"ler_perfil", "ler_logs", "ler_alertas", "gerenciar_usuarios", "gerenciar_bloqueios"}),
+    "admin": frozenset(
+        {
+            "ler_perfil",
+            "ler_logs",
+            "ler_alertas",
+            "gerenciar_usuarios",
+            "gerenciar_bloqueios",
+        }
+    ),
     "analista": frozenset({"ler_perfil", "ler_logs", "ler_alertas"}),
     "usuario": frozenset({"ler_perfil"}),
 }
@@ -17,7 +25,9 @@ class ChecadorPermissao:
         # Permissão exigida pela rota
         self.permissao = permissao
 
-    def __call__(self, usuario: Annotated[entidades.Usuario, Depends(verificar_usuario)]) -> entidades.Usuario:
+    def __call__(
+        self, usuario: Annotated[entidades.Usuario, Depends(verificar_usuario)]
+    ) -> entidades.Usuario:
         permissoes_do_papel = PERMISSOES.get(usuario.papel, frozenset())
         if self.permissao not in permissoes_do_papel:
             raise HTTPException(

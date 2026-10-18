@@ -12,8 +12,8 @@ class LogAuditoria(Base):
     """Tabela para guardar os logs de auditoria
 
     Args:
-        Base: cria automaticamente um dicionário Python que armazena uma série de 
-        objetos Table chaveados para sua string nome. 
+        Base: cria automaticamente um dicionário Python que armazena uma série de
+        objetos Table chaveados para sua string nome.
     """
 
     __tablename__ = "LOGS_AUDITORIA"

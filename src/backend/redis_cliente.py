@@ -4,9 +4,15 @@ import time
 import uuid
 
 import redis
-from config import REDIS_URL, REFRESH_TOKEN_EXPIRAMENTO_DIAS
+from config import (
+    ATIVACAO_TOKEN_TTL_HORAS,
+    REDEFINICAO_TOKEN_TTL_MINUTOS,
+    REDIS_URL,
+    REFRESH_TOKEN_EXPIRAMENTO_DIAS,
+)
 from seguranca import gerar_refresh_token, hash_refresh_token
 
+# ------- REFRESH TOKENS -------------
 cliente = redis.Redis.from_url(REDIS_URL, decode_responses=True)
 
 TTL_REFRESH_SEGUNDOS = REFRESH_TOKEN_EXPIRAMENTO_DIAS * 24 * 60 * 60
@@ -62,11 +68,14 @@ def criar_sessao(usuario_id: uuid.UUID | str, familia: str) -> str:
     token = gerar_refresh_token()
     chave = f"refresh:{hash_refresh_token(token)}"
     pipeline = cliente.pipeline()
-    pipeline.hset(chave, mapping={
-        "usuario_id": str(usuario_id),
-        "familia": familia,
-        "estado": "ativo",
-    })
+    pipeline.hset(
+        chave,
+        mapping={
+            "usuario_id": str(usuario_id),
+            "familia": familia,
+            "estado": "ativo",
+        },
+    )
     pipeline.expire(chave, TTL_REFRESH_SEGUNDOS)
     pipeline.sadd(f"usuario_familias:{usuario_id}", familia)
     pipeline.expire(f"usuario_familias:{usuario_id}", TTL_REFRESH_SEGUNDOS)
@@ -76,8 +85,9 @@ def criar_sessao(usuario_id: uuid.UUID | str, familia: str) -> str:
 
 def rotacionar_sessao(token: str) -> tuple[str, str, str, str | None]:
     # Retorna (estado, familia, usuario_id, novo_token); novo_token só existe se estado == "ok"
-    resultado = _ROTACIONAR(keys=[f"refresh:{hash_refresh_token(token)}"],
-                            args=[TTL_REFRESH_SEGUNDOS])
+    resultado = _ROTACIONAR(
+        keys=[f"refresh:{hash_refresh_token(token)}"], args=[TTL_REFRESH_SEGUNDOS]
+    )
     estado, familia, usuario_id = resultado
     if estado != "ok":
         return estado, familia, usuario_id, None
@@ -100,3 +110,42 @@ def revogar_todas_sessoes(usuario_id: uuid.UUID | str) -> None:
     # Troca de senha, bloqueio ou exclusão
     for familia in cliente.smembers(f"usuario_familias:{usuario_id}"):
         revogar_familia(_texto(familia))
+
+
+# ------- TOKENS DE ATIVAÇÃO E REDEFINIÇÃO DE SENHA -------------
+# São de uso único: a leitura (GETDEL) já consome e invalida o token.
+
+
+def _criar_token_uso_unico(
+    prefixo: str, usuario_id: "uuid.UUID | str", ttl_segundos: int
+) -> str:
+    token = gerar_refresh_token()  # mesma geração de 256 bits, reaproveitada
+    cliente.set(
+        f"{prefixo}:{hash_refresh_token(token)}", str(usuario_id), ex=ttl_segundos
+    )
+    return token
+
+
+def _consumir_token_uso_unico(prefixo: str, token: str) -> str | None:
+    valor = cliente.getdel(f"{prefixo}:{hash_refresh_token(token)}")
+    return _texto(valor) if valor else None
+
+
+def criar_token_ativacao(usuario_id: "uuid.UUID | str") -> str:
+    return _criar_token_uso_unico(
+        "ativacao", usuario_id, ATIVACAO_TOKEN_TTL_HORAS * 60 * 60
+    )
+
+
+def consumir_token_ativacao(token: str) -> str | None:
+    return _consumir_token_uso_unico("ativacao", token)
+
+
+def criar_token_redefinicao(usuario_id: "uuid.UUID | str") -> str:
+    return _criar_token_uso_unico(
+        "redefinicao", usuario_id, REDEFINICAO_TOKEN_TTL_MINUTOS * 60
+    )
+
+
+def consumir_token_redefinicao(token: str) -> str | None:
+    return _consumir_token_uso_unico("redefinicao", token)

@@ -8,8 +8,10 @@ from controllers.usuarios_con import UsuariosController
 import os
 from pathlib import Path
 
+from config import FRONTEND_URL
 from database.database import Base, engine_admin
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 PROTECOES_SQL = Path(__file__).parent / "database" / "protecoes.sql"
 APP_USUARIO = os.getenv("BANCO_APP_USUARIO", "seal_app")
@@ -19,7 +21,9 @@ def preparar_banco() -> None:
     # Tabelas são criadas pelo admin, então o app (restrito) não é dono delas
     Base.metadata.create_all(bind=engine_admin)
     usuario_quotado = '"' + APP_USUARIO.replace('"', '""') + '"'
-    sql = PROTECOES_SQL.read_text(encoding="utf-8").replace("__APP_USUARIO__", usuario_quotado)
+    sql = PROTECOES_SQL.read_text(encoding="utf-8").replace(
+        "__APP_USUARIO__", usuario_quotado
+    )
     with engine_admin.begin() as conexao:
         conexao.exec_driver_sql(sql)
 
@@ -33,6 +37,14 @@ app = FastAPI(
         "Para testar rotas protegidas: faça login em /auth/login pelo botão **Authorize** "
         "(usuário e senha). O refresh token fica em cookie HttpOnly e não aparece na resposta."
     ),
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[FRONTEND_URL],
+    allow_credentials=True,  # necessário para o cookie do refresh token
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(AuthController().router)

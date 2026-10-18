@@ -12,8 +12,8 @@ class TentativaLogin(Base):
     """Tabela para guardar as tentativas de login
 
     Args:
-        Base: cria automaticamente um dicionário Python que armazena uma série de 
-        objetos Table chaveados para sua string nome. 
+        Base: cria automaticamente um dicionário Python que armazena uma série de
+        objetos Table chaveados para sua string nome.
     """
 
     __tablename__ = "TENTATIVAS_LOGIN"
@@ -26,4 +26,5 @@ class TentativaLogin(Base):
     com_sucesso: Mapped[bool] = mapped_column(Boolean, default=True)
     motivo: Mapped[str] = mapped_column(Text)
     atualizado_em: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), onupdate=func.now)
+        DateTime(timezone=True), onupdate=func.now
+    )
