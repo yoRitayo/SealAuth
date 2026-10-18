@@ -43,8 +43,25 @@ services:
     environment:
       - DATABASE_URL=postgresql://${BANCO_USUARIO}:${BANCO_SENHA}@pgbouncer:6432/${BANCO_NOME}
       - ENV=${AMBIENTE_PYTHON}
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET_FILE=/run/secrets/jwt_secret
+      - COOKIE_SECURE=${COOKIE_SECURE:-true}
+    secrets:
+      - jwt_secret
     depends_on:
       - pgbouncer
+      - redis
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: seal_redis
+    restart: always
+    # AOF: mantém as sessões de refresh token depois de um restart
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
     networks:
       - app-network
 
@@ -67,6 +84,11 @@ services:
 
 volumes:
   pgdata:
+  redisdata:
+
+secrets:
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
 
 networks:
   app-network:
