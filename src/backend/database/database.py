@@ -2,22 +2,41 @@ import os
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 load_dotenv()
 
-CONTAINER_NOME=os.getenv("CONTAINER_NOME", "meu_postgres_container")
-BANCO_NOME=os.getenv("BANCO_NOME", "meubanco")
-BANCO_USUARIO=os.getenv("BANCO_USUARIO", "meusuario")
-BANCO_SENHA=os.getenv("BANCO_SENHA", "uma_senha_muito_segura_e_longa")
+BANCO_NOME = os.getenv("BANCO_NOME", "meubanco")
 
-# O docker-compose entrega DATABASE_URL apontando para o pgbouncer
-URL_BANCO = os.getenv(
-    "DATABASE_URL",
-    f"postgresql+psycopg2://{BANCO_USUARIO}:{BANCO_SENHA}@{CONTAINER_NOME}/{BANCO_NOME}",
-)
 
-engine = create_engine(URL_BANCO, echo=True)
+def _url_banco(usuario: str, senha: str, host: str, porta: int) -> URL:
+    # URL.create evita problemas com caracteres especiais na senha (ex.: #, @, /)
+    return URL.create(
+        "postgresql+psycopg2",
+        username=usuario,
+        password=senha,
+        host=host,
+        port=porta,
+        database=BANCO_NOME,
+    )
+
+
+# Usuário da aplicação (restrito), conectado pelo pgbouncer
+engine = create_engine(_url_banco(
+    usuario=os.getenv("APP_DB_USUARIO", "seal_app"),
+    senha=os.getenv("APP_DB_SENHA", ""),
+    host=os.getenv("APP_DB_HOST", "localhost"),
+    porta=int(os.getenv("APP_DB_PORTA", "6432")),
+), echo=True)
+
+# Usuário admin (guardiao_app), direto no Postgres: só para criar tabelas e aplicar protecoes
+engine_admin = create_engine(_url_banco(
+    usuario=os.getenv("ADMIN_DB_USUARIO", "guardiao_app"),
+    senha=os.getenv("ADMIN_DB_SENHA", ""),
+    host=os.getenv("ADMIN_DB_HOST", "localhost"),
+    porta=int(os.getenv("ADMIN_DB_PORTA", "5432")),
+), echo=True)
 
 # Fábrica de sessões
 SessaoLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

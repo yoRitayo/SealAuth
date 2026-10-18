@@ -5,10 +5,26 @@ from controllers.bloqueios_ip_con import BloqueiosIPController
 from controllers.logs_auditoria_con import LogsAuditoriaController
 from controllers.tentativas_login_con import TentativasLoginController
 from controllers.usuarios_con import UsuariosController
-from database.database import Base, engine
+import os
+from pathlib import Path
+
+from database.database import Base, engine_admin
 from fastapi import FastAPI
 
-Base.metadata.create_all(bind=engine)
+PROTECOES_SQL = Path(__file__).parent / "database" / "protecoes.sql"
+APP_USUARIO = os.getenv("BANCO_APP_USUARIO", "seal_app")
+
+
+def preparar_banco() -> None:
+    # Tabelas são criadas pelo admin, então o app (restrito) não é dono delas
+    Base.metadata.create_all(bind=engine_admin)
+    usuario_quotado = '"' + APP_USUARIO.replace('"', '""') + '"'
+    sql = PROTECOES_SQL.read_text(encoding="utf-8").replace("__APP_USUARIO__", usuario_quotado)
+    with engine_admin.begin() as conexao:
+        conexao.exec_driver_sql(sql)
+
+
+preparar_banco()
 
 app = FastAPI()
 

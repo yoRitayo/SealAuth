@@ -9,10 +9,13 @@ services:
       POSTGRES_DB: ${BANCO_NOME}
       POSTGRES_USER: ${BANCO_USUARIO}
       POSTGRES_PASSWORD: ${BANCO_SENHA}
+      BANCO_APP_USUARIO: ${BANCO_APP_USUARIO}
+      BANCO_APP_SENHA: ${BANCO_APP_SENHA}
     ports:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./src/backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - app-network
 
@@ -23,10 +26,11 @@ services:
     environment:
       - DB_HOST=db          
       - DB_PORT=5432    
-      - DB_USER=${BANCO_USUARIO}
-      - DB_PASSWORD=${BANCO_SENHA}
+      - DB_USER=${BANCO_APP_USUARIO}
+      - DB_PASSWORD=${BANCO_APP_SENHA}
       - DB_NAME=${BANCO_NOME}
       - POOL_MODE=transaction
+      - AUTH_TYPE=scram-sha-256
     depends_on:
       - db
     networks:               
@@ -41,7 +45,15 @@ services:
     ports:
       - "8001:8000"
     environment:
-      - DATABASE_URL=postgresql://${BANCO_USUARIO}:${BANCO_SENHA}@pgbouncer:6432/${BANCO_NOME}
+      - APP_DB_USUARIO=${BANCO_APP_USUARIO}
+      - APP_DB_SENHA=${BANCO_APP_SENHA}
+      - APP_DB_HOST=pgbouncer
+      - APP_DB_PORTA=5432
+      - ADMIN_DB_USUARIO=${BANCO_USUARIO}
+      - ADMIN_DB_SENHA=${BANCO_SENHA}
+      - ADMIN_DB_HOST=db
+      - ADMIN_DB_PORTA=5432
+      - BANCO_NOME=${BANCO_NOME}
       - ENV=${AMBIENTE_PYTHON}
       - REDIS_URL=redis://redis:6379/0
       - JWT_SECRET_FILE=/run/secrets/jwt_secret
