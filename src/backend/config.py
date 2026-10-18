@@ -5,13 +5,38 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-JWT_SECRET = os.getenv("JWT_SECRET")
+
+def _carregar_jwt_secret() -> str:
+    # Tenta um valor gerado pelo openssl
+    caminho = os.getenv("JWT_SECRET_FILE", "/run/secrets/jwt_secret")
+    if os.path.isfile(caminho):
+        with open(caminho, encoding="utf-8") as arquivo:
+            conteudo = arquivo.read().strip()
+        if conteudo:
+            return conteudo
+    # Fallback para o valor do .env
+    valor = os.getenv("JWT_SECRET", "").strip()
+    if valor:
+        return valor
+    raise RuntimeError(
+        "Nenhum segredo JWT encontrado: gere o docker secret ou defina JWT_SECRET no .env")
+
+
+JWT_SECRET = _carregar_jwt_secret()
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-JWT_EXPIRA_MINUTOS = int(os.getenv("JWT_EXPIRA_MINUTOS", "15"))
+JWT_EXPIRAMENTO_MINUTOS = int(os.getenv("JWT_EXPIRAMENTO_MINUTOS", "15"))
+REFRESH_TOKEN_EXPIRAMENTO_DIAS = int(
+    os.getenv("REFRESH_TOKEN_EXPIRAMENTO_DIAS", "1"))
+
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+# Cookie Secure só funciona com HTTPS; em desenvolvimento local use COOKIE_SECURE=false
+COOKIE_SECURE = os.getenv("COOKIE_SECURE", "true").lower() == "true"
 
 # Bloqueio automático após falhas de login consecutivas
 LIMITE_FALHAS_LOGIN = 5
 MINUTOS_BLOQUEIO_LOGIN = 15
 
-if not JWT_SECRET:
-    raise RuntimeError("JWT_SECRET não foi definido ainda. Configure no .env.")
+# Rate limiting do login
+LIMITE_REQUISICOES_LOGIN = 7
+JANELA_RATE_LIMIT_SEGUNDOS = 60
