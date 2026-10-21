@@ -1,5 +1,7 @@
 # main.py
+import auditoria  # registra os listeners do log de auditoria
 from controllers.alertas_con import AlertasController
+from controllers.auditoria_con import AuditoriaController
 from controllers.auth_con import AuthController
 from controllers.bloqueios_ip_con import BloqueiosIPController
 from controllers.logs_auditoria_con import LogsAuditoriaController
@@ -10,7 +12,7 @@ from pathlib import Path
 
 from config import FRONTEND_URL
 from database.database import Base, engine_admin
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 PROTECOES_SQL = Path(__file__).parent / "database" / "protecoes.sql"
@@ -47,8 +49,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def registrar_ip(requisicao: Request, chamar_proximo):
+    # IP de origem usado no log de auditoria
+    auditoria.ip_requisicao.set(requisicao.client.host if requisicao.client else None)
+    return await chamar_proximo(requisicao)
+
+
 app.include_router(AuthController().router)
 app.include_router(UsuariosController().router)
+app.include_router(AuditoriaController().router)
 app.include_router(LogsAuditoriaController().router)
 app.include_router(AlertasController().router)
 app.include_router(BloqueiosIPController().router)

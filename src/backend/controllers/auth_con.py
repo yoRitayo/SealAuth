@@ -12,6 +12,7 @@ from config import (
     MINUTOS_BLOQUEIO_LOGIN,
     REFRESH_TOKEN_EXPIRAMENTO_DIAS,
 )
+from cripto import indice_email
 from database import entidades
 from database.database import obter_db
 from email_service import enviar_email_ativacao, enviar_email_redefinicao
@@ -199,7 +200,7 @@ class AuthController:
         except redis.RedisError:
             raise _indisponivel()
         _definir_cookie(resposta, refresh_token)
-        return Token(access_token=criar_token_acesso(usuario.id))
+        return Token(access_token=criar_token_acesso(usuario.id, usuario.papel))
 
     async def refresh(
         self,
@@ -230,7 +231,7 @@ class AuthController:
             raise nao_autorizado
 
         _definir_cookie(resposta, novo_token)
-        return Token(access_token=criar_token_acesso(usuario.id))
+        return Token(access_token=criar_token_acesso(usuario.id, usuario.papel))
 
     async def ativar_conta(
         self, dados: AtivarConta, db: Annotated[Session, Depends(obter_db)]
@@ -256,7 +257,7 @@ class AuthController:
     ) -> dict:
         usuario = (
             db.query(entidades.Usuario)
-            .filter(entidades.Usuario.email == dados.email.encode())
+            .filter(entidades.Usuario.email_indice == indice_email(dados.email))
             .first()
         )
         # Resposta genérica: não revela se o e-mail existe ou já foi ativado
@@ -274,7 +275,7 @@ class AuthController:
     ) -> dict:
         usuario = (
             db.query(entidades.Usuario)
-            .filter(entidades.Usuario.email == dados.email.encode())
+            .filter(entidades.Usuario.email_indice == indice_email(dados.email))
             .first()
         )
         # Resposta genérica: não revela se o e-mail existe (evita enumeração de contas)

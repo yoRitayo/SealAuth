@@ -8,7 +8,8 @@ from uuid import UUID
 import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
-from config import JWT_ALGORITHM, JWT_EXPIRAMENTO_MINUTOS, JWT_SECRET
+from config import JWT_EXPIRAMENTO_MINUTOS
+from cripto import CHAVE_PRIVADA, CHAVE_PUBLICA
 from database import entidades
 from database.database import obter_db
 from fastapi import Depends, HTTPException, status
@@ -44,22 +45,25 @@ def hash_refresh_token(token: str) -> str:
 
 # ------- AUTORIZAÇÃO -------------
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+# RS256: assina com a chave privada, valida com a pública
+JWT_ALGORITHM = "RS256"
 
 
-def criar_token_acesso(usuario_id: UUID) -> str:
+def criar_token_acesso(usuario_id: UUID, papel: str | None = None) -> str:
     agora = datetime.now(UTC)
     payload = {
         "sub": str(usuario_id),  # subject
         "iat": agora,  # issued_at, quando o token foi emitido
         "exp": agora + timedelta(minutes=JWT_EXPIRAMENTO_MINUTOS),  # expiration
         "type": "access",
+        "papel": papel,
     }
-    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return jwt.encode(payload, CHAVE_PRIVADA, algorithm=JWT_ALGORITHM)
 
 
 def decodificar_token(token: str) -> dict:
     # Levanta jwt.InvalidTokenError se o token for inválido ou expirado
-    return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    return jwt.decode(token, CHAVE_PUBLICA, algorithms=[JWT_ALGORITHM])
 
 
 def verificar_usuario(
@@ -86,4 +90,5 @@ def verificar_usuario(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Conta bloqueada"
         )
+    db.info["ator_id"] = usuario.id  # quem fez a ação, para o log de auditoria
     return usuario

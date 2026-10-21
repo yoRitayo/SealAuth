@@ -19,3 +19,7 @@ DROP TRIGGER IF EXISTS logs_imutaveis ON "LOGS_AUDITORIA";
 CREATE TRIGGER logs_imutaveis
     BEFORE UPDATE OR DELETE ON "LOGS_AUDITORIA"
     FOR EACH ROW EXECUTE FUNCTION bloqueia_alteracao();
+
+-- Blind index do e-mail (HMAC-SHA256): create_all não adiciona colunas a tabelas existentes
+ALTER TABLE "USUARIOS" ADD COLUMN IF NOT EXISTS email_indice bytea;
+CREATE INDEX IF NOT EXISTS "ix_USUARIOS_email_indice" ON "USUARIOS" (email_indice);

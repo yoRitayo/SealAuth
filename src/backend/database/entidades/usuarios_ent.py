@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
+from cripto import EmailCifrado
 from database.database import Base
 from sqlalchemy import DateTime, Integer, LargeBinary, Text, Uuid
 from sqlalchemy.dialects.postgresql import CITEXT
@@ -19,7 +20,9 @@ class Usuario(Base):
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     nome_usuario: Mapped[str] = mapped_column(CITEXT, unique=True)
-    email: Mapped[str] = mapped_column(LargeBinary)
+    email: Mapped[str] = mapped_column(EmailCifrado)  # AES-256-GCM
+    # HMAC-SHA256 do e-mail normalizado: busca sem decifrar (preenchido em auditoria.py)
+    email_indice: Mapped[bytes | None] = mapped_column(LargeBinary, index=True)
     senha: Mapped[str] = mapped_column(Text)
     papel: Mapped[str] = mapped_column(Text)
     status: Mapped[str] = mapped_column(Text)

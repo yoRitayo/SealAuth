@@ -64,6 +64,10 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - JWT_SECRET_FILE=/run/secrets/jwt_secret
       - COOKIE_SECURE=${COOKIE_SECURE:-true}
+      - CHAVES_DIR=/app/keys
+    volumes:
+      # chaves AES, HMAC e RSA geradas por src/backend/scripts/gerar_chaves.py
+      - ./keys:/app/keys:ro
     secrets:
       - jwt_secret
     depends_on:

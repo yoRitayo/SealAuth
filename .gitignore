@@ -442,3 +442,6 @@ src/backend/.venv/
 
 # Docker secrets gerados localmente
 secrets/
+
+# Chaves geradas localmente (gerar_chaves.py)
+keys/

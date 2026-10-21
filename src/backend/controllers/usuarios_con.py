@@ -117,7 +117,7 @@ class UsuariosController:
         usuario = entidades.Usuario(
             id=uuid4(),
             nome_usuario=dados.nome_usuario,
-            email=dados.email.encode(),  # LargeBinary por enquanto
+            email=dados.email,  # cifrado com AES-256-GCM pelo tipo EmailCifrado
             senha=gerar_hash_senha(dados.senha),
             papel="usuario",
             status="pendente",  # precisa clicar no link de ativação enviado por e-mail
