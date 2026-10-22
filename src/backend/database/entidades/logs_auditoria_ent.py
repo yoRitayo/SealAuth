@@ -26,5 +26,5 @@ class LogAuditoria(Base):
     jsonb: Mapped[dict[str, Any]] = mapped_column(JSONB)
     hash_anterior: Mapped[str] = mapped_column(Text)
     hash_atual: Mapped[str] = mapped_column(Text)
-    assinatura: Mapped[str] = mapped_column(LargeBinary)
+    assinatura: Mapped[bytes] = mapped_column(LargeBinary)  # RSA-PSS
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
