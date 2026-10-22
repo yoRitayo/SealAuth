@@ -7,7 +7,7 @@ help:  ## lista os alvos disponíveis
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
 
 up:  ## sobe todos os serviços em background
-	docker compose up -d --build
+	docker compose -f docker-compose.yml up -d --build
 
 down:  ## derruba os serviços (mantém os volumes)
 	docker compose down
