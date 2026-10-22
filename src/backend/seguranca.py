@@ -12,6 +12,7 @@ from config import JWT_EXPIRAMENTO_MINUTOS
 from cripto import CHAVE_PRIVADA, CHAVE_PUBLICA
 from database import entidades
 from database.database import obter_db
+from deteccao import alertar_token_invalido
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -80,6 +81,10 @@ def verificar_usuario(
         usuario_id = UUID(payload["sub"])
         if payload.get("type") != "access":
             raise credenciais_invalidas
+    except (jwt.InvalidSignatureError, jwt.InvalidAlgorithmError) as erro:
+        # Assinatura que não confere ou algoritmo trocado: regra "token inválido" do IDS
+        alertar_token_invalido(db, type(erro).__name__)
+        raise credenciais_invalidas
     except (jwt.InvalidTokenError, KeyError, ValueError):
         raise credenciais_invalidas
 

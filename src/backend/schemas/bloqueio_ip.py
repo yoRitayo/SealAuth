@@ -19,6 +19,7 @@ class BloqueioIPCriar(BaseModel):
     )
     id_alerta: int | None = None
     faixa: str
+    expira_em: datetime | None = None  # nulo = permanente
 
 
 class BloqueioIPAtualizar(BaseModel):
@@ -47,4 +48,4 @@ class BloqueioIP(Entidade):
     id_alerta: int | None
     faixa: str
     criado_em: datetime
-    expira_em: datetime
+    expira_em: datetime | None

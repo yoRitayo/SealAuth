@@ -59,7 +59,7 @@ class Alerta(Entidade):
         }
     )
     id: int
-    id_usuario: UUID
+    id_usuario: UUID | None
     evento: str
     ip: str
     jsonb: dict[str, Any]

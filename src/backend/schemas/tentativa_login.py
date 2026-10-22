@@ -23,7 +23,7 @@ class TentativaLogin(Entidade):
         }
     )
     id: int
-    id_usuario: UUID
+    id_usuario: UUID | None
     nome_usuario_informado: str
     ip: str
     com_sucesso: bool

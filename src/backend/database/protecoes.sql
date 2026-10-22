@@ -23,3 +23,17 @@ CREATE TRIGGER logs_imutaveis
 -- Blind index do e-mail (HMAC-SHA256): create_all não adiciona colunas a tabelas existentes
 ALTER TABLE "USUARIOS" ADD COLUMN IF NOT EXISTS email_indice bytea;
 CREATE INDEX IF NOT EXISTS "ix_USUARIOS_email_indice" ON "USUARIOS" (email_indice);
+
+-- IDS/IPS: alerta só por IP, tentativa de usuário inexistente e bloqueio de IP sem expiração
+ALTER TABLE "ALERTAS" ALTER COLUMN id_usuario DROP NOT NULL;
+ALTER TABLE "TENTATIVAS_LOGIN" ALTER COLUMN id_usuario DROP NOT NULL;
+ALTER TABLE "BLOQUEIOS_IP" ALTER COLUMN expira_em DROP NOT NULL;
+
+-- Excluir o usuário não apaga os alertas dele (evidência do IDS)
+ALTER TABLE "ALERTAS" DROP CONSTRAINT IF EXISTS "ALERTAS_id_usuario_fkey";
+ALTER TABLE "ALERTAS" ADD CONSTRAINT "ALERTAS_id_usuario_fkey"
+    FOREIGN KEY (id_usuario) REFERENCES "USUARIOS" (id) ON DELETE SET NULL;
+
+-- Janelas do IDS: tentativas de um IP em ordem de tempo
+CREATE INDEX IF NOT EXISTS "ix_TENTATIVAS_LOGIN_ip_atualizado_em"
+    ON "TENTATIVAS_LOGIN" (ip, atualizado_em);

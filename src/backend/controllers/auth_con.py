@@ -15,6 +15,11 @@ from config import (
 from cripto import indice_email
 from database import entidades
 from database.database import obter_db
+from deteccao import (
+    MOTIVO_USUARIO_INEXISTENTE,
+    alertar_excesso_requisicoes,
+    analisar_falha_login,
+)
 from email_service import enviar_email_ativacao, enviar_email_redefinicao
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -123,6 +128,8 @@ class AuthController:
         except redis.RedisError:
             raise _indisponivel()
         if not (dentro_do_limite_ip and dentro_do_limite_usuario):
+            alertar_excesso_requisicoes(db, ip)
+            db.commit()
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail="Muitas tentativas. Aguarde um minuto.",
@@ -135,6 +142,12 @@ class AuthController:
             .first()
         )
         if usuario is None:
+            # Registrada sem id: alimenta a regra de enumeração do IDS
+            self._registrar_tentativa(
+                db, None, formulario.username, ip, False, MOTIVO_USUARIO_INEXISTENTE, agora
+            )
+            analisar_falha_login(db, ip, None, MOTIVO_USUARIO_INEXISTENTE)
+            db.commit()
             raise credenciais_invalidas
 
         if usuario.status == "bloqueado":
@@ -153,6 +166,7 @@ class AuthController:
                     "conta_bloqueada",
                     agora,
                 )
+                analisar_falha_login(db, ip, usuario, "conta_bloqueada")
                 db.commit()
                 raise HTTPException(
                     status_code=status.HTTP_423_LOCKED, detail="Conta bloqueada"
@@ -168,6 +182,7 @@ class AuthController:
                 "conta_pendente_ativacao",
                 agora,
             )
+            analisar_falha_login(db, ip, usuario, "conta_pendente_ativacao")
             db.commit()
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -184,6 +199,7 @@ class AuthController:
             self._registrar_tentativa(
                 db, usuario, formulario.username, ip, False, "senha_incorreta", agora
             )
+            analisar_falha_login(db, ip, usuario, "senha_incorreta")
             db.commit()
             raise credenciais_invalidas
 
@@ -330,7 +346,7 @@ class AuthController:
     @staticmethod
     def _registrar_tentativa(
         db: Session,
-        usuario: entidades.Usuario,
+        usuario: entidades.Usuario | None,
         nome_informado: str,
         ip: str,
         com_sucesso: bool,
@@ -339,7 +355,7 @@ class AuthController:
     ) -> None:
         db.add(
             entidades.TentativaLogin(
-                id_usuario=usuario.id,
+                id_usuario=usuario.id if usuario else None,
                 nome_usuario_informado=nome_informado,
                 ip=ip,
                 com_sucesso=com_sucesso,

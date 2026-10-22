@@ -22,8 +22,9 @@ class Alerta(Base):
     __tablename__ = "ALERTAS"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    id_usuario: Mapped[UUID] = mapped_column(
-        ForeignKey("USUARIOS.id", ondelete="CASCADE")
+    # Nulo em alerta só por IP (credential stuffing); excluir o usuário não apaga o alerta
+    id_usuario: Mapped[UUID | None] = mapped_column(
+        ForeignKey("USUARIOS.id", ondelete="SET NULL"), nullable=True
     )
     evento: Mapped[str] = mapped_column(Text)
     ip: Mapped[str] = mapped_column(INET)  # Armazena IPv4 ou IPv6

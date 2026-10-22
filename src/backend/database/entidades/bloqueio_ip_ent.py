@@ -26,5 +26,8 @@ class BloqueioIP(Base):
     )
     faixa: Mapped[str] = mapped_column(CIDR)  # armazena endereço de sub-rede
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    expira_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Nulo = bloqueio permanente (até um admin alterar)
+    expira_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     alerta: Mapped["Alerta"] = relationship(back_populates="bloqueio_ip")

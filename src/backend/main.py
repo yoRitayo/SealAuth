@@ -12,7 +12,8 @@ from pathlib import Path
 
 from config import FRONTEND_URL
 from database.database import Base, engine_admin
-from fastapi import FastAPI, Request
+from deteccao import verificar_firewall
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 PROTECOES_SQL = Path(__file__).parent / "database" / "protecoes.sql"
@@ -39,6 +40,8 @@ app = FastAPI(
         "Para testar rotas protegidas: faça login em /auth/login pelo botão **Authorize** "
         "(usuário e senha). O refresh token fica em cookie HttpOnly e não aparece na resposta."
     ),
+    # Firewall: IP em BLOQUEIOS_IP recebe 403 antes de qualquer rota (dentro do CORS)
+    dependencies=[Depends(verificar_firewall)],
 )
 
 app.add_middleware(
