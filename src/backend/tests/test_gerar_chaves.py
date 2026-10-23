@@ -62,7 +62,9 @@ def test_certificado_san_e_validade():
 # ------- gerar -------------
 def test_destino_padrao_e_keys_na_raiz():
     assert gerar_chaves.DESTINO_PADRAO.name == "keys"
-    assert (gerar_chaves.DESTINO_PADRAO.parent / "src" / "backend").is_dir()
+    # No container, DESTINO_PADRAO aponta para /app/keys; localmente para SealAuth/keys
+    destino_pai = gerar_chaves.DESTINO_PADRAO.parent
+    assert (destino_pai / "src" / "backend").is_dir() or (destino_pai / "main.py").is_file()
 
 
 def test_gerar_cria_todos_os_arquivos(chaves):
