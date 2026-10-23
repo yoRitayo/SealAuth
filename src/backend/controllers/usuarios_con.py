@@ -19,6 +19,7 @@ from schemas import (
 from seguranca import gerar_hash_senha, verificar_senha, verificar_usuario
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from utils_bloqueio import limpar_bloqueios_expirados
 
 
 def _pode_gerenciar_usuarios(usuario: entidades.Usuario) -> bool:
@@ -145,6 +146,8 @@ class UsuariosController:
         pulo: int = 0,
         limite: int = 100,
     ) -> list[entidades.Usuario]:
+        # Limpa bloqueios temporários que já expiraram
+        limpar_bloqueios_expirados(db)
         return (
             db.query(entidades.Usuario)
             .order_by(entidades.Usuario.criado_em.desc())
@@ -215,6 +218,11 @@ class UsuariosController:
         if not verificar_senha(usuario_atual.senha, dados.senha_atual):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Senha atual incorreta"
+            )
+        if verificar_senha(usuario_atual.senha, dados.nova_senha):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Nova senha não pode ser igual à senha atual",
             )
         usuario_atual.senha = gerar_hash_senha(dados.nova_senha)
         db.commit()

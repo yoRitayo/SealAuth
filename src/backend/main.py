@@ -13,11 +13,13 @@ from pathlib import Path
 from config import FRONTEND_URL
 from database.database import Base, engine_admin
 from deteccao import verificar_firewall
+from erros_validacao import validacao_sem_dados_enviados
 from fastapi import Depends, FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 PROTECOES_SQL = Path(__file__).parent / "database" / "protecoes.sql"
-APP_USUARIO = os.getenv("BANCO_APP_USUARIO", "seal_app")
+APP_USUARIO = os.getenv("APP_DB_USUARIO", "seal_app")
 
 
 def preparar_banco() -> None:
@@ -29,6 +31,10 @@ def preparar_banco() -> None:
     )
     with engine_admin.begin() as conexao:
         conexao.exec_driver_sql(sql)
+
+    # Seed: cria usuário admin inicial se não houver nenhum
+    from scripts.seed import criar_usuario_admin
+    criar_usuario_admin()
 
 
 preparar_banco()
@@ -42,6 +48,8 @@ app = FastAPI(
     ),
     # Firewall: IP em BLOQUEIOS_IP recebe 403 antes de qualquer rota (dentro do CORS)
     dependencies=[Depends(verificar_firewall)],
+    # 422 sem o campo "input": não devolve senhas nem tokens enviados pelo cliente
+    exception_handlers={RequestValidationError: validacao_sem_dados_enviados},
 )
 
 app.add_middleware(

@@ -14,7 +14,10 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 
-DESTINO_PADRAO = Path(__file__).resolve().parents[3] / "keys"
+try:
+    DESTINO_PADRAO = Path(__file__).resolve().parents[3] / "keys"
+except IndexError:
+    DESTINO_PADRAO = Path(__file__).resolve().parents[1] / "keys"
 
 
 def _pem_privada(chave: rsa.RSAPrivateKey) -> bytes:

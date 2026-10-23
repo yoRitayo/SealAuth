@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 from schemas.base import Entidade
+from schemas.senha import SenhaForte
 
 Papel = Literal["admin", "analista", "usuario"]
 Status = Literal["pendente", "ativo", "bloqueado"]
@@ -42,14 +43,14 @@ class UsuarioCriar(BaseModel):
                 {
                     "nome_usuario": "ana",
                     "email": "ana@exemplo.com",
-                    "senha": "senha-forte-123",
+                    "senha": "MinhaSenha#Forte2026!",
                 }
             ]
         }
     )
     nome_usuario: str
     email: str
-    senha: str
+    senha: SenhaForte
 
 
 class UsuarioAtualizarNome(BaseModel):
@@ -63,12 +64,12 @@ class UsuarioAtualizarSenha(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [
-                {"senha_atual": "senha-forte-123", "nova_senha": "nova-senha-456"}
+                {"senha_atual": "MinhaSenha#Forte2026!", "nova_senha": "NovaSenha#Forte2026!"}
             ]
         }
     )
     senha_atual: str
-    nova_senha: str
+    nova_senha: SenhaForte
 
 
 class UsuarioAtualizarPapel(BaseModel):
@@ -89,12 +90,12 @@ class RedefinirSenha(BaseModel):
         json_schema_extra={
             "examples": [
                 {"token": "token-recebido-por-email",
-                    "nova_senha": "nova-senha-456"}
+                    "nova_senha": "NovaSenha#Forte2026!"}
             ]
         }
     )
     token: str
-    nova_senha: str
+    nova_senha: SenhaForte
 
 
 class AtivarConta(BaseModel):
@@ -119,9 +120,11 @@ class Token(BaseModel):
                 {
                     "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.exemplo.assinatura",
                     "token_type": "bearer",
+                    "avisos": None,
                 }
             ]
         }
     )
     access_token: str
     token_type: str = "bearer"
+    avisos: list[str] | None = None

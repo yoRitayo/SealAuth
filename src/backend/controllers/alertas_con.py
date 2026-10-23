@@ -1,18 +1,42 @@
+import base64
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
+from auditoria import calcular_hash
 from controle_acesso import ChecadorPermissao
+from cripto import assinar
 from database import entidades
 from database.database import obter_db
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from schemas import Alerta, AlertaCriar
 from sqlalchemy.orm import Session
+
+
+class DadosAlertaParaAssinar(BaseModel):
+    id_usuario: UUID
+    evento: str
+    ip: str
+    jsonb: dict[str, Any]
+    hash_anterior: str
+
+
+class ResultadoAssinatura(BaseModel):
+    hash_atual: str
+    assinatura: str
 
 
 class AlertasController:
     def __init__(self):
         self.router = APIRouter(tags=["alertas"])
+        self.router.add_api_route(
+            "/alertas/gerar-assinatura",
+            self.gerar_assinatura,
+            methods=["POST"],
+            response_model=ResultadoAssinatura,
+            dependencies=[Depends(ChecadorPermissao("gerenciar_bloqueios"))],
+        )
         self.router.add_api_route(
             "/alertas",
             self.criar_alerta,
@@ -48,6 +72,23 @@ class AlertasController:
             .offset(pulo)
             .limit(limite)
             .all()
+        )
+
+    async def gerar_assinatura(
+        self, dados: DadosAlertaParaAssinar
+    ) -> ResultadoAssinatura:
+        hash_atual = calcular_hash(
+            hash_anterior=dados.hash_anterior,
+            ts=datetime.now(UTC),
+            id_usuario=dados.id_usuario,
+            evento=dados.evento,
+            ip=dados.ip,
+            detalhes=dados.jsonb,
+        )
+        assinatura_bytes = assinar(hash_atual.encode())
+        assinatura_base64 = base64.b64encode(assinatura_bytes).decode()
+        return ResultadoAssinatura(
+            hash_atual=hash_atual, assinatura=assinatura_base64
         )
 
     async def criar_alerta(

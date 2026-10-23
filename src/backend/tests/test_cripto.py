@@ -38,7 +38,9 @@ def test_diretorio_chaves_sem_variavel_usa_keys_na_raiz(monkeypatch):
     monkeypatch.delenv("CHAVES_DIR", raising=False)
     caminho = cripto._diretorio_chaves()
     assert caminho.name == "keys"
-    assert (caminho.parent / "src" / "backend" / "cripto.py").is_file()
+    # No container, CHAVES_DIR aponta para /app/keys; localmente para SealAuth/keys
+    pai = caminho.parent
+    assert (pai / "src" / "backend" / "cripto.py").is_file() or (pai / "cripto.py").is_file()
 
 
 def test_diretorio_chaves_ignora_valor_em_branco(monkeypatch):

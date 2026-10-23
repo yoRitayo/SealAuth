@@ -23,6 +23,7 @@ from deteccao import (
 from email_service import enviar_email_ativacao, enviar_email_redefinicao
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
+from utils_bloqueio import limpar_bloqueios_expirados
 from redis_cliente import (
     consumir_token_ativacao,
     consumir_token_redefinicao,
@@ -113,6 +114,9 @@ class AuthController:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+        # Limpa bloqueios temporários que já expiraram
+        limpar_bloqueios_expirados(db)
+
         # Rate limit por IP e por nome de usuário (vale até para usuários inexistentes)
         try:
             dentro_do_limite_ip = verificar_rate_limit(
@@ -157,6 +161,8 @@ class AuthController:
                 usuario.bloqueado_ate = None
                 usuario.falhas_consecutivas = 0
             else:
+                tempo_restante = usuario.bloqueado_ate - agora if usuario.bloqueado_ate else None
+                minutos = int(tempo_restante.total_seconds() / 60) if tempo_restante else 0
                 self._registrar_tentativa(
                     db,
                     usuario,
@@ -169,7 +175,8 @@ class AuthController:
                 analisar_falha_login(db, ip, usuario, "conta_bloqueada")
                 db.commit()
                 raise HTTPException(
-                    status_code=status.HTTP_423_LOCKED, detail="Conta bloqueada"
+                    status_code=status.HTTP_423_LOCKED,
+                    detail=f"Conta bloqueada por comportamento suspeito. Desbloqueio automático em {minutos} minuto(s)."
                 )
 
         if usuario.status == "pendente":
@@ -209,6 +216,14 @@ class AuthController:
         )
         db.commit()
 
+        # Verificar alertas e comportamentos inadequados
+        avisos = []
+        alertas = db.query(entidades.Alerta).filter(
+            entidades.Alerta.id_usuario == usuario.id
+        ).all()
+        if alertas:
+            avisos.append(f"⚠️ Comportamento inadequado detectado: {len(alertas)} alerta(s) registrado(s). Verifique sua atividade.")
+
         # Sessão única: um novo login derruba as sessões anteriores da conta
         try:
             revogar_todas_sessoes(usuario.id)
@@ -216,7 +231,10 @@ class AuthController:
         except redis.RedisError:
             raise _indisponivel()
         _definir_cookie(resposta, refresh_token)
-        return Token(access_token=criar_token_acesso(usuario.id, usuario.papel))
+        return Token(
+            access_token=criar_token_acesso(usuario.id, usuario.papel),
+            avisos=avisos if avisos else None
+        )
 
     async def refresh(
         self,
@@ -264,6 +282,19 @@ class AuthController:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Usuário não encontrado"
             )
         if usuario.status == "pendente":
+            # Valida o email antes de ativar
+            try:
+                email_decifrado = usuario.email  # EmailCifrado decifra automaticamente
+                if not email_decifrado or '@' not in email_decifrado:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Email inválido. Conta não pode ser ativada.",
+                    )
+            except Exception:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Falha ao validar email da conta.",
+                )
             usuario.status = "ativo"
             db.commit()
         return {"detail": "Conta ativada com sucesso"}

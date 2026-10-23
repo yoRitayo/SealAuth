@@ -19,7 +19,10 @@ def _diretorio_chaves() -> Path:
     valor = os.getenv("CHAVES_DIR", "").strip()
     if valor:
         return Path(valor)
-    return Path(__file__).resolve().parents[2] / "keys"
+    try:
+        return Path(__file__).resolve().parents[2] / "keys"
+    except IndexError:
+        return Path(__file__).resolve().parents[0] / "keys"
 
 
 CHAVES_DIR = _diretorio_chaves()
