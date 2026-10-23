@@ -120,9 +120,11 @@ class Token(BaseModel):
                 {
                     "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.exemplo.assinatura",
                     "token_type": "bearer",
+                    "avisos": None,
                 }
             ]
         }
     )
     access_token: str
     token_type: str = "bearer"
+    avisos: list[str] | None = None
