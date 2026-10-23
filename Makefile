@@ -58,4 +58,4 @@ test-watch:  ## roda testes em modo watch
 	docker compose exec backend pytest-watch
 
 test-coverage:  ## gera relatório de cobertura de testes
-	docker compose exec backend pytest --cov=src/backend --cov-report=html --cov-report=term
+	docker compose exec backend pytest --cov=. --cov-report=html --cov-report=term-missing
