@@ -4,6 +4,7 @@ import type { Alerta } from '../../services/types/alertas-types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../style/componentes/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../style/componentes/tabs';
 import { AbaLogs } from './AbaLogs';
+import { MeuPerfil } from './MeuPerfil';
 import { PainelCabecalho } from './PainelCabecalho';
 
 export function PainelAnalista() {
@@ -13,9 +14,13 @@ export function PainelAnalista() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         <Tabs defaultValue="alertas">
           <TabsList>
+            <TabsTrigger value="perfil">Meu perfil</TabsTrigger>
             <TabsTrigger value="alertas">Alertas</TabsTrigger>
             <TabsTrigger value="logs">Logs de auditoria</TabsTrigger>
           </TabsList>
+          <TabsContent value="perfil" className="pt-4">
+            <MeuPerfil />
+          </TabsContent>
           <TabsContent value="alertas" className="pt-4">
             <AbaAlertasSomenteLeitura />
           </TabsContent>

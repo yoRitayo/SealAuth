@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../style/componente
 import { AbaAlertasAdmin } from './AbaAlertasAdmin';
 import { AbaLogs } from './AbaLogs';
 import { AbaUsuarios } from './AbaUsuarios';
+import { MeuPerfil } from './MeuPerfil';
 import { PainelCabecalho } from './PainelCabecalho';
 
 export function PainelAdmin() {
@@ -11,10 +12,14 @@ export function PainelAdmin() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         <Tabs defaultValue="usuarios">
           <TabsList>
+            <TabsTrigger value="perfil">Meu perfil</TabsTrigger>
             <TabsTrigger value="usuarios">Usuários</TabsTrigger>
             <TabsTrigger value="alertas">Alertas</TabsTrigger>
             <TabsTrigger value="logs">Logs de auditoria</TabsTrigger>
           </TabsList>
+          <TabsContent value="perfil" className="pt-4">
+            <MeuPerfil />
+          </TabsContent>
           <TabsContent value="usuarios" className="pt-4">
             <AbaUsuarios />
           </TabsContent>
