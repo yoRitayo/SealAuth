@@ -19,7 +19,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 PROTECOES_SQL = Path(__file__).parent / "database" / "protecoes.sql"
-APP_USUARIO = os.getenv("BANCO_APP_USUARIO", "seal_app")
+APP_USUARIO = os.getenv("APP_DB_USUARIO", "seal_app")
 
 
 def preparar_banco() -> None:
@@ -31,6 +31,10 @@ def preparar_banco() -> None:
     )
     with engine_admin.begin() as conexao:
         conexao.exec_driver_sql(sql)
+
+    # Seed: cria usuário admin inicial se não houver nenhum
+    from scripts.seed import criar_usuario_admin
+    criar_usuario_admin()
 
 
 preparar_banco()
