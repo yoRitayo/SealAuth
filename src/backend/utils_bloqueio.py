@@ -1,4 +1,3 @@
-"""Utilitários para gerenciamento de bloqueios de usuários."""
 from datetime import UTC, datetime
 
 from database import entidades
