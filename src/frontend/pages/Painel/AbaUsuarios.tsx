@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ApiError } from '../../services/api';
 import { useAuth } from '../../services/Login/auth-context';
 import { usuariosService } from '../../services/Usuarios/usuarios-service';
 import type { Papel, Usuario } from '../../services/types/user-types';
@@ -16,6 +17,16 @@ import {
 import { Badge } from '../../style/componentes/badge';
 import { Button } from '../../style/componentes/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../../style/componentes/dialog';
+import { Input } from '../../style/componentes/input';
+import { Label } from '../../style/componentes/label';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -23,6 +34,7 @@ import {
   SelectValue,
 } from '../../style/componentes/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../style/componentes/table';
+import { ValidadorDeSenha } from '../utils';
 
 const CORES_STATUS: Record<string, 'default' | 'secondary' | 'destructive'> = {
   ativo: 'default',
@@ -35,6 +47,7 @@ export function AbaUsuarios() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
+  const [abrirCriacao, setAbrirCriacao] = useState(false);
 
   useEffect(() => {
     usuariosService
@@ -53,31 +66,145 @@ export function AbaUsuarios() {
   if (erro) return <p className="text-red-600">{erro}</p>;
 
   return (
-    <div className="bg-white rounded-2xl shadow overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nome de usuário</TableHead>
-            <TableHead>Papel</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Falhas</TableHead>
-            <TableHead>Criado em</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {usuarios.map((usuario) => (
-            <LinhaUsuario
-              key={usuario.id}
-              usuario={usuario}
-              ehVoceMesmo={usuario.id === usuarioLogado?.id}
-              onAtualizado={atualizarNaLista}
-              onDeletado={() => removerDaLista(usuario.id)}
-            />
-          ))}
-        </TableBody>
-      </Table>
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Dialog open={abrirCriacao} onOpenChange={setAbrirCriacao}>
+          <DialogTrigger asChild>
+            <Button className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white">+ Novo usuário</Button>
+          </DialogTrigger>
+          <FormularioCriarUsuario
+            onCriado={(usuario) => {
+              setUsuarios((lista) => [usuario, ...lista]);
+              setAbrirCriacao(false);
+            }}
+          />
+        </Dialog>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome de usuário</TableHead>
+              <TableHead>Papel</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Falhas</TableHead>
+              <TableHead>Criado em</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {usuarios.map((usuario) => (
+              <LinhaUsuario
+                key={usuario.id}
+                usuario={usuario}
+                ehVoceMesmo={usuario.id === usuarioLogado?.id}
+                onAtualizado={atualizarNaLista}
+                onDeletado={() => removerDaLista(usuario.id)}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
+  );
+}
+
+function FormularioCriarUsuario({ onCriado }: { onCriado: (usuario: Usuario) => void }) {
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [tipo, setTipo] = useState<Papel>('usuario');
+  const [erro, setErro] = useState('');
+  const [carregando, setCarregando] = useState(false);
+
+  const criar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErro('');
+
+    const validacao = ValidadorDeSenha.validar(senha);
+    if (!validacao.eValida) {
+      setErro(validacao.erro || 'Senha inválida.');
+      return;
+    }
+
+    setCarregando(true);
+    try {
+      const usuario = await usuariosService.criar({
+        nome_usuario: nome,
+        email,
+        senha,
+      });
+      onCriado(usuario);
+    } catch (erroCapturado) {
+      const texto = erroCapturado instanceof ApiError && erroCapturado.status === 409
+        ? 'Esse nome de usuário ou email já está em uso.'
+        : 'Não foi possível criar o usuário.';
+      setErro(texto);
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Criar novo usuário</DialogTitle>
+      </DialogHeader>
+      <form onSubmit={criar} className="space-y-3">
+        <div className="space-y-1">
+          <Label htmlFor="novo-nome">Nome de usuário</Label>
+          <Input
+            id="novo-nome"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder="ana.silva"
+            required
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="novo-email">Email</Label>
+          <Input
+            id="novo-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="ana@exemplo.com"
+            required
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="nova-senha">Senha</Label>
+          <Input
+            id="nova-senha"
+            type="password"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            placeholder="Senha forte"
+            required
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="tipo">Tipo de usuário</Label>
+          <Select value={tipo} onValueChange={(valor) => setTipo(valor as Papel)}>
+            <SelectTrigger id="tipo">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="usuario">Usuário</SelectItem>
+              <SelectItem value="analista">Analista</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {erro && <p className="text-sm text-red-600">{erro}</p>}
+        <DialogFooter>
+          <Button type="submit" disabled={carregando} className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
+            {carregando ? 'Criando...' : 'Criar usuário'}
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
   );
 }
 
