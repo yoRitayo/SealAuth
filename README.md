@@ -81,7 +81,22 @@ Os demais valores do template já funcionam em desenvolvimento. `SMTP_*` pode fi
 
 > Não existe chave secreta de terceiros para obter: todos os segredos do projeto são gerados por você.
 
-## 4. Segredo do JWT (obrigatório antes de subir)
+## 4. Segredos: JWT e chaves criptográficas (obrigatório antes de subir)
+
+São dois passos, sempre a partir da **raiz do repositório**. Sem eles a API não sobe.
+
+### 4.1 Chaves do backend (`keys/`)
+
+A API cifra e-mails (AES-256), assina logs de auditoria (RSA) e lê essas chaves da pasta `keys/`, que fica fora do git. Gere-as uma vez:
+
+```bash
+pip install cryptography          # só se ainda não tiver (ou use o .venv do passo 5)
+python src/backend/scripts/gerar_chaves.py
+```
+
+O script não sobrescreve chaves existentes. `--forcar` gera outras, mas **os e-mails já cifrados e os logs já assinados deixam de ser legíveis/verificáveis**: use apenas em banco vazio.
+
+### 4.2 Segredo do JWT
 
 O Compose monta o segredo do JWT como Docker secret a partir de `secrets/jwt_secret.txt`. **Sem esse arquivo, o `docker compose up` falha.** Gere-o, sempre a partir da **raiz do repositório**:
 
@@ -98,6 +113,8 @@ Windows (PowerShell):
 O script usa `openssl rand`; se o OpenSSL não existir, copia o `JWT_SECRET` do seu `.env` (por isso o passo 3 vem antes). Para gerar outro segredo, apague `secrets/jwt_secret.txt` e rode de novo — isso desloga todos os usuários.
 
 ## 5. Instalação das dependências
+
+> O passo 4.1 precisa do pacote `cryptography` no Python do seu computador. Se preferir, faça o passo 5 (venv) antes dele.
 
 Para **rodar o projeto, não instale nada manualmente**: o Docker instala as dependências na construção das imagens (passo 6).
 
@@ -165,6 +182,47 @@ O painel inicial depende do papel:
 | `analista` | Alertas e logs, **somente leitura** |
 | `usuario` | Apenas o próprio perfil (nome de usuário e senha) |
 
+## Modo desenvolvimento x produção
+
+O `docker-compose.yml` e os Dockerfiles vêm configurados para **desenvolvimento** (API com `--reload`, frontend com `yarn dev`). Para produção, siga o passo a passo acima e ajuste:
+
+### Checklist de produção
+
+1. **`.env` de produção**, com valores diferentes dos de dev:
+
+   | Variável | Valor em produção |
+   |---|---|
+   | `AMBIENTE_PYTHON` | `production` (qualquer valor diferente de `development` exige SMTP) |
+   | `VITE_AMBIENTE_NODE` | `production` |
+   | `COOKIE_SECURE` | `true` |
+   | `FRONTEND_URL` | URL pública do frontend com `https://` (é a única origem aceita pelo CORS) |
+   | `VITE_API_URL` | URL pública da API com `https://` |
+   | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_SENHA`, `SMTP_REMETENTE` | Servidor de e-mail real. Sem `SMTP_HOST` a API recusa enviar e ninguém ativa a conta |
+   | `BANCO_SENHA`, `BANCO_APP_SENHA` | Senhas fortes e únicas (`openssl rand -hex 24`) |
+
+2. **Segredos novos** (nunca reaproveite os de dev): rode os passos 3 e 4 no servidor. Guarde um backup de `keys/` e `secrets/` em local seguro: sem `keys/`, os e-mails cifrados e a verificação dos logs se perdem.
+3. **HTTPS na frente da aplicação.** Use um proxy reverso (Nginx, Caddy, Traefik) com certificado válido apontando para as portas `3006` (frontend) e `8001` (API). Sem HTTPS, `COOKIE_SECURE=true` impede o login de manter a sessão.
+4. **Não exponha o banco.** Remova a linha `"5433:5432"` do serviço `db` no `docker-compose.yml` e deixe o firewall liberando só 80/443.
+5. **Retire o modo de desenvolvimento das imagens:** troque `--reload` por `--workers 2` (ou mais) no `CMD` de `src/backend/Dockerfile` e, no frontend, gere o build (`yarn build`) e sirva a pasta `dist/` por um servidor estático em vez de `yarn dev`.
+6. Suba e confira:
+
+   ```bash
+   ./scripts/gerar_jwt_secret.sh
+   make up
+   make ps
+   make logs
+   ```
+7. Crie sua conta pela tela de registro, ative-a pelo e-mail e promova-a a `admin` (veja "Primeiro acesso", passo 3). Depois, não deixe contas de teste no banco.
+
+### Atualizando uma instalação existente
+
+```bash
+git pull
+make up          # reconstrói as imagens com o código novo
+```
+
+Os dados ficam nos volumes `pgdata` e `redisdata` e sobrevivem ao `make up` e ao `make down`. Só `docker compose down -v` os apaga.
+
 ## Comandos úteis
 
 | Comando | O que faz |
@@ -216,7 +274,7 @@ SealAuth/
 
 ### 1. `docker compose up` falha com erro sobre `secrets/jwt_secret.txt`
 
-O arquivo do segredo não existe. Gere-o (passo 4) e suba de novo:
+O arquivo do segredo não existe. Gere-o (passo 4.2) e suba de novo:
 
 ```bash
 ./scripts/gerar_jwt_secret.sh
@@ -243,3 +301,49 @@ COOKIE_SECURE=false
 ```
 
 Depois `make up`. Nunca use `false` em produção.
+
+### 4. A API cai logo ao subir com `Chave ... não encontrada: rode scripts/gerar_chaves.py`
+
+A pasta `keys/` está vazia ou não existe. Gere as chaves (passo 4.1) e suba de novo:
+
+```bash
+python src/backend/scripts/gerar_chaves.py
+make up
+```
+
+### 5. Cadastro ou login deram "não foi possível conectar ao servidor", ou o navegador mostra erro de CORS
+
+- Confira se a API está de pé: `make ps` e abra http://localhost:8001/docs.
+- `VITE_API_URL` precisa ser `http://localhost:8001` (o template vem com `XXX`).
+- `FRONTEND_URL` precisa ser **exatamente** a URL que você abre no navegador (mesma porta, sem barra no fim). `127.0.0.1` e `localhost` contam como origens diferentes.
+
+Depois de mudar o `.env`, rode `make up`: as variáveis só são lidas na criação dos containers.
+
+### 6. A conta não ativa: o e-mail nunca chega
+
+Sem `SMTP_HOST`, em desenvolvimento, o link fica nos logs (`make logs`, procure `ativar-conta?token=`). Fora de `development`, a API **recusa** enviar sem SMTP: configure o servidor de e-mail. O token expira em `ATIVACAO_TOKEN_TTL_HORAS`; se venceu, peça um novo link pelo endpoint de reenvio de ativação (`POST /auth/reenviar-ativacao`, veja o Swagger em `/docs`).
+
+### 7. "Muitas tentativas" ou conta bloqueada nos testes
+
+O login limita 7 tentativas por minuto e bloqueia a conta por 15 minutos após 5 senhas erradas. Para liberar na hora em desenvolvimento:
+
+```bash
+make redis-cli        # depois: FLUSHALL   (apaga também as sessões)
+make psql             # depois: UPDATE "USUARIOS" SET status = 'ativo', falhas_consecutivas = 0, bloqueado_ate = NULL WHERE nome_usuario = 'seu-usuario';
+```
+
+### 8. Porta já em uso (`3006`, `8001` ou `5433`)
+
+Outro programa (ou outro Postgres local) usa a porta. Pare-o, ou troque o lado esquerdo do mapeamento em `docker-compose.yml` (ex.: `"5434:5432"`). Se mudar a `8001`, ajuste `VITE_API_URL` e, se mudar a `3006`, ajuste `FRONTEND_URL`.
+
+### 9. Mudei o código e nada mudou
+
+Os containers não montam o código como volume. Rode `make up` para reconstruir a imagem. Se ainda assim parecer antigo, force: `docker compose build --no-cache backend frontend && make up`.
+
+### 10. Alterei o `init.sql` ou as tabelas e o banco não reflete
+
+`init.sql` só roda quando o volume do Postgres é criado. Em desenvolvimento, recrie o banco com `docker compose down -v && make up` (**apaga os dados**). Em produção, aplique a mudança com `make psql`.
+
+### 11. Erros de permissão em `secrets/` ou `keys/` no Linux
+
+O script do JWT cria o arquivo com permissão `600`. Se o container não conseguir ler, confira o dono: `ls -l secrets keys`. Não use `chmod 777`; ajuste o dono para o seu usuário.
